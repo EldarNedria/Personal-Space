@@ -1,0 +1,206 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard Privata{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/dashboard.css') }}">
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+{% endblock %}
+
+{% block content %}
+<div class="dashboard-layout">
+    <!-- Sidebar -->
+    <aside class="sidebar glass-panel">
+        <div class="sidebar-header">
+            <h2><i class="fa-solid fa-gauge-high"></i> Dashboard</h2>
+        </div>
+        <nav class="sidebar-nav">
+            <a href="#" class="active"><i class="fa-solid fa-house"></i> Home</a>
+            <a href="{{ url_for('cms.cms_index') }}"><i class="fa-solid fa-newspaper"></i> Gestione Blog</a>
+            <a href="#todos-widget"><i class="fa-solid fa-list-check"></i> To-Do List</a>
+            <a href="#rss-widget"><i class="fa-solid fa-rss"></i> Notizie RSS</a>
+            <a href="#stats-widget"><i class="fa-solid fa-chart-line"></i> Statistiche</a>
+        </nav>
+        <div class="sidebar-footer">
+            <a href="{{ url_for('auth.logout') }}" class="btn btn-danger"><i class="fa-solid fa-right-from-bracket"></i>
+                Esci</a>
+        </div>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="dashboard-main">
+        <header class="main-header glass-panel">
+            <div>
+                <h1 id="greeting">Benvenuto, Eldar!</h1>
+                <div id="quote" style="font-size: 0.95rem; opacity: 0.8; margin-top: 5px; font-style: italic;">
+                    Caricamento citazione...</div>
+            </div>
+            <div style="display: flex; align-items: center; gap: 15px;">
+                <button id="customize-btn" class="btn btn-small" title="Personalizza Dashboard" style="background: rgba(255,255,255,0.1);">
+                    <i class="fa-solid fa-sliders"></i> Personalizza
+                </button>
+                <div id="clock" class="clock">00:00:00</div>
+            </div>
+        </header>
+
+        <!-- Pannello Personalizzazione Widget -->
+        <div id="customize-overlay" class="customize-overlay" style="display: none;"></div>
+        <div id="customize-panel" class="customize-panel">
+            <div class="customize-header">
+                <h3><i class="fa-solid fa-puzzle-piece"></i> Widget Add-On</h3>
+                <button id="customize-close" class="btn btn-small" style="background: transparent;"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <p style="font-size: 0.85rem; opacity: 0.6; margin-bottom: 15px;">Attiva o disattiva i widget della tua dashboard.</p>
+            <div id="widget-toggles-list"></div>
+        </div>
+
+        <div class="widgets-grid">
+            <!-- Meteo Widget (Open-Meteo) -->
+            <div class="widget glass-panel" id="weather-widget" data-widget-id="weather">
+                <h3><i class="fa-solid fa-cloud-sun"></i> Meteo Locale</h3>
+                <div id="weather-content" class="weather-content">
+                    <div class="loader"></div>
+                </div>
+                <div style="text-align: right; font-size: 0.75rem; margin-top: auto; padding-top: 10px; opacity: 0.6;">
+                    Powered by <a href="https://open-meteo.com/" target="_blank"
+                        style="color: inherit; text-decoration: underline;">Open-Meteo</a>
+                </div>
+            </div>
+
+            <!-- Google Tasks Widget -->
+            <div class="widget glass-panel" id="todos-widget" data-widget-id="todos">
+                <h3 style="display: flex; align-items: center; gap: 8px;">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M12 22C17.5228 22 22 17.5228 22 12C22 6.47715 17.5228 2 12 2C6.47715 2 2 6.47715 2 12C2 17.5228 6.47715 22 12 22Z" fill="#4285F4"/>
+                        <path d="M10.5 16.5L6 12L7.5 10.5L10.5 13.5L16.5 7.5L18 9L10.5 16.5Z" fill="white"/>
+                    </svg>
+                    Google Tasks
+                </h3>
+                <div style="margin-bottom: 15px;">
+                    <button id="toggle-task-form-btn" class="btn" style="width: 100%; margin-bottom: 10px; display: flex; justify-content: center; gap: 8px;"><i class="fa-solid fa-plus"></i> Aggiungi Task</button>
+                    <form id="todo-form" class="todo-form" style="display: none; flex-direction: column; gap: 10px; background: rgba(0,0,0,0.1); padding: 15px; border-radius: 8px;">
+                        <input type="text" id="todo-input" placeholder="Titolo del task..." required style="width: 100%;">
+                        <textarea id="todo-notes" placeholder="Descrizione (opzionale)" style="width: 100%; min-height: 60px; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 6px; padding: 10px; color: inherit; font-family: inherit; resize: vertical;"></textarea>
+                        <input type="date" id="todo-due" style="width: 100%; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 6px; padding: 10px; color: inherit; font-family: inherit;">
+                        <div style="display: flex; gap: 10px; justify-content: flex-end;">
+                            <button type="button" id="cancel-task-btn" class="btn" style="background: rgba(255,255,255,0.1);">Annulla</button>
+                            <button type="submit" id="save-task-btn" class="btn"><i class="fa-solid fa-check"></i> Salva</button>
+                        </div>
+                    </form>
+                </div>
+                <ul id="todo-list" class="todo-list">
+                    <div class="loader"></div>
+                </ul>
+            </div>
+
+            <!-- RSS Feed Widget -->
+            <div class="widget glass-panel" id="rss-widget" data-widget-id="rss">
+                <div class="widget-header">
+                    <h3><i class="fa-solid fa-rss"></i> Ultime Notizie</h3>
+                    <select id="rss-select" class="form-select">
+                        <option value="bloomberg_general">Bloomberg General (News)</option>
+                        <option value="bloomberg_markets">Bloomberg Markets</option>
+                        <option value="bloomberg_politics">Bloomberg Politics</option>
+                        <option value="bloomberg_technology">Bloomberg Technology</option>
+                        <option value="nasa_feed">NASA Feed</option>
+                    </select>
+                </div>
+                <div id="rss-content" class="rss-content">
+                    <div class="loader"></div>
+                </div>
+            </div>
+
+            <!-- Google Calendar Widget -->
+            <div class="widget glass-panel" id="calendar-widget" data-widget-id="calendar">
+                <div class="widget-header">
+                    <h3 style="display: flex; align-items: center; gap: 8px;">
+                        <svg width="20" height="20" viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg">
+                            <path fill="#4285F4" d="M3 11.5v25c0 3.038 2.462 5.5 5.5 5.5h31c3.038 0 5.5-2.462 5.5-5.5v-25H3z"/>
+                            <path fill="#34A853" d="M3 11.5L24 25l21-13.5v-6c0-3.038-2.462-5.5-5.5-5.5h-31C5.462 6 3 8.462 3 11.5z"/>
+                            <path fill="#FBBC05" d="M3 11.5v6L24 25V11.5z"/>
+                            <path fill="#EA4335" d="M45 11.5v6L24 25V11.5z"/>
+                            <text x="24" y="34" font-family="Arial" font-weight="bold" font-size="16" fill="#fff" text-anchor="middle">31</text>
+                        </svg>
+                        Google Calendar
+                    </h3>
+                    <button id="add-event-btn" class="btn btn-small" title="Nuovo Evento"><i class="fa-solid fa-plus"></i></button>
+                </div>
+
+                <div class="calendar-controls" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+                    <button id="cal-prev-month" class="btn btn-small" style="background: transparent; box-shadow: none;"><i class="fa-solid fa-chevron-left"></i></button>
+                    <div id="cal-month-year" style="font-weight: bold; font-size: 1.1rem;">Mese Anno</div>
+                    <button id="cal-next-month" class="btn btn-small" style="background: transparent; box-shadow: none;"><i class="fa-solid fa-chevron-right"></i></button>
+                </div>
+
+                <div class="calendar-grid">
+                    <div class="cal-header">L</div><div class="cal-header">M</div><div class="cal-header">M</div>
+                    <div class="cal-header">G</div><div class="cal-header">V</div><div class="cal-header">S</div><div class="cal-header">D</div>
+                    <div id="cal-days-container" style="display: contents;"></div>
+                </div>
+
+                <div id="calendar-form-container" style="display: none; flex-direction: column; gap: 8px; margin-top: 15px; padding-top: 15px; border-top: 1px solid var(--glass-border);">
+                    <input type="text" id="event-title" class="form-input" placeholder="Titolo Evento">
+                    <input type="datetime-local" id="event-start" class="form-input">
+                    <input type="datetime-local" id="event-end" class="form-input">
+                    <button id="save-event-btn" class="btn"><i class="fa-solid fa-check"></i> Salva Evento</button>
+                </div>
+
+                <div id="calendar-day-details" style="display: none; margin-top: 15px; padding-top: 15px; border-top: 1px solid var(--glass-border);">
+                    <h4 id="cal-selected-date-title" style="margin-bottom: 10px; font-size: 0.9rem; opacity: 0.8;"></h4>
+                    <div id="cal-selected-events"></div>
+                </div>
+            </div>
+
+            <!-- Appunti Rapidi (Scratchpad) -->
+            <div class="widget glass-panel" id="scratchpad-widget" data-widget-id="scratchpad">
+                <h3><i class="fa-solid fa-pen-to-square"></i> Appunti Rapidi</h3>
+                <textarea id="scratchpad-text"
+                    placeholder="Scrivi qui i tuoi appunti... Verranno salvati in automatico nel tuo browser!"></textarea>
+            </div>
+
+            <!-- Pomodoro Timer -->
+            <div class="widget glass-panel" id="pomodoro-widget" data-widget-id="pomodoro" style="align-items: center; text-align: center;">
+                <h3
+                    style="width: 100%; border-bottom: 1px solid var(--glass-border); padding-bottom: 10px; margin-bottom: 0;">
+                    <i class="fa-solid fa-stopwatch"></i> Timer Pomodoro
+                </h3>
+                <div id="pomodoro-display"
+                    style="font-size: 4rem; font-family: monospace; font-weight: bold; margin: auto 0; color: var(--primary-color);">
+                    25:00</div>
+                <div style="display: flex; gap: 10px; justify-content: center; width: 100%; margin-top: auto;">
+                    <button id="pomodoro-start" class="btn" title="Avvia"><i class="fa-solid fa-play"></i></button>
+                    <button id="pomodoro-pause" class="btn" style="background: var(--warning-color);" title="Pausa"><i
+                            class="fa-solid fa-pause"></i></button>
+                    <button id="pomodoro-reset" class="btn" style="background: var(--danger-color);" title="Reset"><i
+                            class="fa-solid fa-rotate-right"></i></button>
+                </div>
+            </div>
+
+            <!-- Stats Widget -->
+            <div class="widget glass-panel" id="stats-widget" data-widget-id="stats">
+                <h3><i class="fa-solid fa-chart-pie"></i> Statistiche Task</h3>
+                <div class="chart-container">
+                    <canvas id="tasksChart"></canvas>
+                </div>
+            </div>
+
+            <!-- Quick Links Widget -->
+            <div class="widget glass-panel" id="links-widget" data-widget-id="links">
+                <h3><i class="fa-solid fa-link"></i> Link Rapidi</h3>
+                <div class="links-grid">
+                    {% for link in links %}
+                    <a href="{{ link.url }}" target="_blank" class="quick-link">
+                        <i class="{{ link.icon | default('fa-solid fa-link') }}"></i>
+                        <span>{{ link.title }}</span>
+                    </a>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </main>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{{ url_for('static', filename='js/dashboard.js') }}"></script>
+{% endblock %}

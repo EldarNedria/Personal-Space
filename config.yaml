@@ -1,0 +1,22 @@
+google_calendar_id: "nedriaeldars@gmail.com"
+
+rss_feeds:
+  bloomberg_general: "https://feeds.bloomberg.com/business/news.rss" # Bloomberg General
+  bloomberg_politics: "https://feeds.bloomberg.com/politics/news.rss" # Bloomberg Politics
+  bloomberg_markets: "https://feeds.bloomberg.com/markets/news.rss" # Bloomberg Markets
+  bloomberg_technology: "https://feeds.bloomberg.com/technology/news.rss" # Bloomberg Technology
+  nasa_feed: "https://www.nasa.gov/news-release/feed/" # NASA Feed
+
+dashboard_links:
+  - title: "GitHub"
+    url: "https://github.com"
+    icon: "fa-brands fa-github"
+  - title: "Render"
+    url: "https://dashboard.render.com"
+    icon: "fa-solid fa-cloud"
+  - title: "ChatGPT"
+    url: "https://chat.openai.com"
+    icon: "fa-solid fa-robot"
+  - title: "Scuola"
+    url: "https://www.portaleargo.it/"
+    icon: "fa-solid fa-graduation-cap"

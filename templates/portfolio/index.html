@@ -1,0 +1,130 @@
+{% extends "base.html" %}
+
+{% block title %}Il Mio Portfolio{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/portfolio.css') }}">
+{% endblock %}
+
+{% block content %}
+<header class="hero">
+    <div class="hero-content glass-panel">
+        <h1>Ciao, sono Eldar Nedria</h1>
+        <p>Benvenuto nel mio progetto di maturità. Questo sito è una uno strumento personale e pagina portfolio.</p>
+        <div class="hero-buttons">
+            <a href="#projects" class="btn">Vedi Progetti</a>
+            <a href="{{ url_for('portfolio.blog') }}" class="btn btn-outline"><i class="fa-solid fa-pen-nib"></i> Leggi il Blog</a>
+            <a href="#contact" class="btn btn-outline">Contattami</a>
+        </div>
+    </div>
+</header>
+
+<section id="projects" class="section">
+    <h2 class="section-title">I Miei Progetti</h2>
+    <div class="grid projects-grid">
+        <div class="card glass-panel">
+            <h3><i class="fa-solid fa-mobile-screen"></i> App Mobile JS</h3>
+            <p>Un'applicazione PWA per gestire compiti scolastici costruita con HTML, CSS e Vanilla JS.</p>
+        </div>
+        <div class="card glass-panel">
+            <h3><i class="fa-solid fa-robot"></i> Robotica (Arduino)</h3>
+            <p>Automazione di un braccio meccanico per TPSIT gestito tramite API REST.</p>
+        </div>
+        <div class="card glass-panel">
+            <h3><i class="fa-solid fa-network-wired"></i> Rete Aziendale</h3>
+            <p>Progettazione di una rete aziendale simulata su Packet Tracer per Sistemi e Reti.</p>
+        </div>
+        <a href="https://github.com/EldarNedria/TCP-Chat-Room" target="_blank" class="card glass-panel" style="text-decoration: none; color: inherit;">
+            <h3><i class="fa-solid fa-comments"></i> TCP Chat Room</h3>
+            <p>Applicazione di chat TCP multi-client in Python con gestione utenti, broadcasting messaggi e privilegi admin (ban/kick).</p>
+            <span style="font-size: 0.8rem; opacity: 0.6; margin-top: 10px; display: inline-block;"><i class="fa-brands fa-github"></i> Vedi su GitHub</span>
+        </a>
+    </div>
+</section>
+
+<section id="skills" class="section">
+    <h2 class="section-title">Competenze (Skill)</h2>
+    <div class="skills-list glass-panel">
+        <span class="skill-tag"><i class="fa-brands fa-python"></i> Python & Flask</span>
+        <span class="skill-tag"><i class="fa-brands fa-html5"></i> HTML5 & CSS3</span>
+        <span class="skill-tag"><i class="fa-brands fa-js"></i> JavaScript & AJAX</span>
+        <span class="skill-tag"><i class="fa-solid fa-server"></i> REST API</span>
+        <span class="skill-tag"><i class="fa-solid fa-database"></i> JSON & XML</span>
+        <span class="skill-tag"><i class="fa-solid fa-cloud"></i> Deploy (Render/GitHub)</span>
+    </div>
+</section>
+
+<section id="contact" class="section contact-section">
+    <div class="glass-panel" style="max-width: 600px; margin: 0 auto;">
+        <h2 class="text-center" style="margin-bottom: 20px;">Contattami</h2>
+        <form id="contact-form" style="display: flex; flex-direction: column; gap: 15px;">
+            <div>
+                <label style="display: block; margin-bottom: 5px; opacity: 0.8;">Il tuo nome</label>
+                <input type="text" id="contact-name" class="form-input" required placeholder="Mario Rossi" style="width: 100%;">
+            </div>
+            <div>
+                <label style="display: block; margin-bottom: 5px; opacity: 0.8;">La tua email</label>
+                <input type="email" id="contact-email" class="form-input" required placeholder="mario.rossi@email.com" style="width: 100%;">
+            </div>
+            <div>
+                <label style="display: block; margin-bottom: 5px; opacity: 0.8;">Il tuo messaggio</label>
+                <textarea id="contact-message" class="form-input" required placeholder="Scrivi qui il tuo messaggio..." style="width: 100%; min-height: 100px; resize: vertical;"></textarea>
+            </div>
+            <button type="submit" id="contact-submit" class="btn" style="align-self: flex-end;">
+                <i class="fa-solid fa-paper-plane"></i> Invia Messaggio
+            </button>
+        </form>
+        <div id="contact-feedback" style="display: none; text-align: center; margin-top: 15px; padding: 10px; border-radius: 8px;"></div>
+    </div>
+</section>
+
+<footer class="footer">
+    <p>&copy; 2026 Nedria Eldar - Progetto Maturita</p>
+    <a href="{{ url_for('auth.login') }}" class="login-link" title="Accesso Riservato"><i class="fa-solid fa-lock"></i>
+        Area Privata</a>
+</footer>
+
+<script>
+document.getElementById('contact-form').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const btn = document.getElementById('contact-submit');
+    const feedback = document.getElementById('contact-feedback');
+    const name = document.getElementById('contact-name').value;
+    const email = document.getElementById('contact-email').value;
+    const message = document.getElementById('contact-message').value;
+    
+    btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Invio in corso...';
+    btn.disabled = true;
+    feedback.style.display = 'none';
+    
+    try {
+        const res = await fetch('/api/contact', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ name, email, message })
+        });
+        const data = await res.json();
+        
+        feedback.style.display = 'block';
+        if (data.success) {
+            feedback.style.background = 'rgba(0, 255, 0, 0.2)';
+            feedback.style.color = '#4ade80';
+            feedback.innerHTML = '<i class="fa-solid fa-circle-check"></i> Messaggio inviato! Ti risponderò presto.';
+            document.getElementById('contact-form').reset();
+        } else {
+            feedback.style.background = 'rgba(255, 0, 0, 0.2)';
+            feedback.style.color = '#ef4444';
+            feedback.innerHTML = '<i class="fa-solid fa-circle-xmark"></i> Errore: ' + data.error;
+        }
+    } catch (err) {
+        feedback.style.display = 'block';
+        feedback.style.background = 'rgba(255, 0, 0, 0.2)';
+        feedback.style.color = '#ef4444';
+        feedback.innerHTML = '<i class="fa-solid fa-circle-xmark"></i> Errore di connessione.';
+    } finally {
+        btn.innerHTML = '<i class="fa-solid fa-paper-plane"></i> Invia Messaggio';
+        btn.disabled = false;
+    }
+});
+</script>
+{% endblock %}

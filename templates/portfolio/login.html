@@ -1,0 +1,115 @@
+{% extends "base.html" %}
+
+{% block title %}Login - Area Privata{% endblock %}
+
+{% block extra_css %}
+<style>
+    .login-container {
+        min-height: 100vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 2rem;
+        background: radial-gradient(circle at center, rgba(59,130,246,0.1) 0%, transparent 70%);
+    }
+    .login-box {
+        padding: 3rem;
+        width: 100%;
+        max-width: 400px;
+        text-align: center;
+    }
+    .login-box h2 {
+        margin-top: 0;
+        margin-bottom: 2rem;
+        color: var(--primary-color);
+    }
+    .form-group {
+        margin-bottom: 1.5rem;
+        text-align: left;
+    }
+    .form-group label {
+        display: block;
+        margin-bottom: 8px;
+        font-weight: 600;
+        opacity: 0.9;
+    }
+    .form-control {
+        width: 100%;
+        padding: 12px;
+        border-radius: 8px;
+        border: 1px solid var(--glass-border);
+        background: rgba(255, 255, 255, 0.05);
+        color: var(--text-color);
+        font-family: var(--font-main);
+        outline: none;
+        box-sizing: border-box;
+        transition: var(--transition);
+    }
+    [data-theme="light"] .form-control {
+        background: rgba(0, 0, 0, 0.05);
+    }
+    .form-control:focus {
+        border-color: var(--primary-color);
+        box-shadow: 0 0 0 2px rgba(59,130,246,0.2);
+    }
+    .btn-block {
+        width: 100%;
+        margin-top: 1rem;
+        font-size: 1.1rem;
+        padding: 12px;
+    }
+    .flash-messages {
+        list-style: none;
+        padding: 0;
+        margin-bottom: 1.5rem;
+    }
+    .flash-message {
+        padding: 12px;
+        border-radius: 8px;
+        background: rgba(239, 68, 68, 0.1);
+        color: var(--danger-color);
+        border: 1px solid rgba(239, 68, 68, 0.3);
+        font-weight: 600;
+    }
+    .back-link {
+        display: inline-block;
+        margin-top: 2rem;
+        color: var(--text-color);
+        text-decoration: none;
+        opacity: 0.7;
+        transition: var(--transition);
+    }
+    .back-link:hover {
+        opacity: 1;
+        color: var(--primary-color);
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="login-container">
+    <div class="login-box glass-panel">
+        <h2><i class="fa-solid fa-user-shield"></i> Area Personale</h2>
+        
+        {% with messages = get_flashed_messages(with_categories=true) %}
+          {% if messages %}
+            <ul class="flash-messages">
+            {% for category, message in messages %}
+              <li class="flash-message">{{ message }}</li>
+            {% endfor %}
+            </ul>
+          {% endif %}
+        {% endwith %}
+
+        <form method="POST" action="{{ url_for('auth.login') }}">
+            <div class="form-group">
+                <label for="password">Password Accesso</label>
+                <input type="password" id="password" name="password" class="form-control" required placeholder="Inserisci password...">
+            </div>
+            <button type="submit" class="btn btn-block">Accedi alla Dashboard</button>
+        </form>
+        
+        <a href="{{ url_for('portfolio.index') }}" class="back-link"><i class="fa-solid fa-arrow-left"></i> Torna al Portfolio</a>
+    </div>
+</div>
+{% endblock %}

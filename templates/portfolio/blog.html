@@ -1,0 +1,92 @@
+{% extends "base.html" %}
+
+{% block title %}Blog - Eldar Nedria{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/portfolio.css') }}">
+<style>
+    .blog-header {
+        padding: 60px 20px;
+        text-align: center;
+        background: linear-gradient(135deg, rgba(var(--primary-rgb), 0.1) 0%, rgba(0,0,0,0) 100%);
+    }
+    .blog-header h1 {
+        font-size: 3rem;
+        margin-bottom: 10px;
+        background: -webkit-linear-gradient(45deg, var(--primary-color), var(--secondary-color));
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+    }
+    .articles-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+        gap: 30px;
+        padding: 40px 20px;
+        max-width: 1200px;
+        margin: 0 auto;
+    }
+    .article-card {
+        padding: 25px;
+        display: flex;
+        flex-direction: column;
+        transition: transform 0.3s ease;
+        text-decoration: none;
+        color: inherit;
+    }
+    .article-card:hover {
+        transform: translateY(-5px);
+    }
+    .article-card h2 {
+        font-size: 1.5rem;
+        margin-bottom: 15px;
+        color: var(--primary-color);
+    }
+    .article-date {
+        font-size: 0.85rem;
+        opacity: 0.6;
+        margin-bottom: 15px;
+    }
+    .article-excerpt {
+        flex-grow: 1;
+        line-height: 1.6;
+        opacity: 0.8;
+    }
+    .read-more {
+        margin-top: 20px;
+        font-weight: bold;
+        color: var(--secondary-color);
+        display: flex;
+        align-items: center;
+        gap: 5px;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<nav style="padding: 20px; text-align: center;">
+    <a href="{{ url_for('portfolio.index') }}" class="btn btn-outline"><i class="fa-solid fa-arrow-left"></i> Torna al Portfolio</a>
+</nav>
+
+<header class="blog-header">
+    <h1>Il Mio Blog</h1>
+    <p>Articoli, pensieri e progetti di informatica.</p>
+</header>
+
+<main class="articles-grid">
+    {% if articles %}
+        {% for article in articles %}
+        <a href="{{ url_for('portfolio.article', id=article.id) }}" class="article-card glass-panel">
+            <div class="article-date"><i class="fa-regular fa-calendar"></i> {{ article.created_at.split(' ')[0] }}</div>
+            <h2>{{ article.title }}</h2>
+            <p class="article-excerpt">{{ article.excerpt }}</p>
+            <div class="read-more">Leggi tutto <i class="fa-solid fa-arrow-right"></i></div>
+        </a>
+        {% endfor %}
+    {% else %}
+        <div style="grid-column: 1 / -1; text-align: center; padding: 40px; opacity: 0.6;">
+            <h2>Nessun articolo pubblicato al momento.</h2>
+            <p>Torna a visitare il blog presto!</p>
+        </div>
+    {% endif %}
+</main>
+{% endblock %}

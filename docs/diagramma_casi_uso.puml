@@ -1,0 +1,49 @@
+@startuml
+left to right direction
+skinparam packageStyle rectangle
+
+' Definizione degli Attori
+actor "Visitatore" as guest
+actor "Amministratore" as admin
+
+' L'Amministratore eredita i permessi del Visitatore
+admin -|> guest
+
+' Sistema
+rectangle "Personal Dashboard & Portfolio" {
+  
+  ' Casi d'uso del Visitatore
+  usecase "Visualizza Portfolio" as UC1
+  usecase "Effettua Login" as UC2
+  
+  ' Casi d'uso dell'Amministratore
+  usecase "Visualizza Dashboard" as UC3
+  usecase "Gestisce To-Do List" as UC4
+  usecase "Aggiunge Task" as UC4a
+  usecase "Completa/Elimina Task" as UC4b
+  usecase "Consulta Feed RSS" as UC5
+  usecase "Visualizza Widget Meteo" as UC6
+  usecase "Visualizza Statistiche" as UC7
+  usecase "Effettua Logout" as UC8
+}
+
+' Collegamenti Visitatore
+guest --> UC1
+guest --> UC2
+
+' Collegamenti Amministratore
+admin --> UC3
+admin --> UC4
+admin --> UC5
+admin --> UC6
+admin --> UC7
+admin --> UC8
+
+' Sotto-casi per la To-Do List
+UC4 <.. UC4a : <<extend>>
+UC4 <.. UC4b : <<extend>>
+
+' Dipendenze: Per vedere la dashboard o gestire i task, bisogna fare il login
+UC3 .> UC2 : <<include>>
+
+@enduml

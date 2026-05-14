@@ -1,0 +1,4 @@
+- CMS per pubblicazione blog/articoli dalla dashboard (privata) verso il portfolio (pubblico), tramite databasee (Collegamento Informatica per il progett)
+- Collegamento con telegram bot per inviare notifiche push (per cosa?)
+- Modifica grafica generale del sito
+- Dashboard Modulare Interattiva: Implementare Drag & Drop dei widget (es. con gridstack.js) e salvataggio delle posizioni/dimensioni personalizzate nel database.

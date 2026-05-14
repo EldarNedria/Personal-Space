@@ -1,0 +1,156 @@
+{% extends "base.html" %}
+
+{% block title %}CMS - Gestione Blog{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/dashboard.css') }}">
+<style>
+    .cms-container {
+        display: flex;
+        flex-direction: column;
+        gap: 20px;
+        padding: 20px 0;
+    }
+    .article-list {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+    }
+    .article-item {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 15px;
+        background: rgba(255,255,255,0.05);
+        border: 1px solid rgba(255,255,255,0.1);
+        border-radius: 8px;
+        margin-bottom: 10px;
+    }
+    .article-item:hover {
+        background: rgba(255,255,255,0.1);
+    }
+    .article-meta {
+        font-size: 0.8rem;
+        opacity: 0.7;
+    }
+    .status-badge {
+        padding: 4px 8px;
+        border-radius: 12px;
+        font-size: 0.75rem;
+        font-weight: bold;
+    }
+    .status-published { background: rgba(0, 255, 0, 0.2); color: #4ade80; }
+    .status-draft { background: rgba(255, 255, 0, 0.2); color: #facc15; }
+    
+    .editor-container {
+        display: none;
+        flex-direction: column;
+        gap: 15px;
+    }
+    .editor-input {
+        width: 100%;
+        background: rgba(0,0,0,0.2);
+        border: 1px solid rgba(255,255,255,0.2);
+        color: white;
+        padding: 12px;
+        border-radius: 8px;
+        font-family: inherit;
+    }
+    .editor-textarea {
+        min-height: 300px;
+        resize: vertical;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="dashboard-layout">
+    <!-- Sidebar -->
+    <aside class="sidebar glass-panel">
+        <div class="sidebar-header">
+            <h2><i class="fa-solid fa-gauge-high"></i> Dashboard</h2>
+        </div>
+        <nav class="sidebar-nav">
+            <a href="{{ url_for('dashboard.index') }}"><i class="fa-solid fa-house"></i> Home</a>
+            <a href="{{ url_for('cms.cms_index') }}" class="active"><i class="fa-solid fa-newspaper"></i> Gestione Blog</a>
+        </nav>
+        <div class="sidebar-footer">
+            <a href="{{ url_for('auth.logout') }}" class="btn btn-danger"><i class="fa-solid fa-right-from-bracket"></i> Esci</a>
+        </div>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="dashboard-main">
+        <header class="main-header glass-panel">
+            <div>
+                <h1>Gestione Articoli</h1>
+                <div style="font-size: 0.95rem; opacity: 0.8; margin-top: 5px;">CMS Integrato (Database SQLite)</div>
+            </div>
+            <button id="btn-new-article" class="btn"><i class="fa-solid fa-plus"></i> Nuovo Articolo</button>
+        </header>
+
+        <div class="cms-container">
+            <!-- LISTA ARTICOLI -->
+            <div id="articles-view" class="widget glass-panel">
+                <h3>I tuoi Articoli</h3>
+                {% if articles %}
+                <ul class="article-list">
+                    {% for article in articles %}
+                    <li class="article-item" data-id="{{ article.id }}">
+                        <div>
+                            <div style="font-weight: 600; font-size: 1.1rem;">{{ article.title }}</div>
+                            <div class="article-meta">
+                                Creato: {{ article.created_at }} | 
+                                <span class="status-badge {{ 'status-published' if article.is_published else 'status-draft' }}">
+                                    {{ 'Pubblicato' if article.is_published else 'Bozza' }}
+                                </span>
+                            </div>
+                        </div>
+                        <div style="display: flex; gap: 10px;">
+                            <button class="btn btn-small btn-edit" onclick="editArticle({{ article.id }})"><i class="fa-solid fa-pen"></i> Modifica</button>
+                            <button class="btn btn-small btn-danger" onclick="deleteArticle({{ article.id }})"><i class="fa-solid fa-trash"></i></button>
+                        </div>
+                    </li>
+                    {% endfor %}
+                </ul>
+                {% else %}
+                <p style="opacity: 0.7; text-align: center; padding: 20px;">Nessun articolo trovato. Clicca su "Nuovo Articolo" per iniziare.</p>
+                {% endif %}
+            </div>
+
+            <!-- EDITOR ARTICOLO -->
+            <div id="editor-view" class="widget glass-panel editor-container">
+                <h3 id="editor-title"><i class="fa-solid fa-pen-nib"></i> Scrivi Articolo</h3>
+                <input type="hidden" id="article-id">
+                
+                <div>
+                    <label style="display: block; margin-bottom: 5px; opacity: 0.8;">Titolo</label>
+                    <input type="text" id="article-title" class="editor-input" placeholder="Il titolo del tuo post...">
+                </div>
+                
+                <div>
+                    <label style="display: block; margin-bottom: 5px; opacity: 0.8;">Riassunto (Excerpt)</label>
+                    <input type="text" id="article-excerpt" class="editor-input" placeholder="Un breve riassunto per la pagina principale...">
+                </div>
+                
+                <div>
+                    <label style="display: block; margin-bottom: 5px; opacity: 0.8;">Contenuto (HTML/Testo)</label>
+                    <textarea id="article-content" class="editor-input editor-textarea" placeholder="Scrivi qui il tuo articolo..."></textarea>
+                </div>
+                
+                <div style="display: flex; align-items: center; gap: 10px;">
+                    <input type="checkbox" id="article-published" style="width: 20px; height: 20px;">
+                    <label for="article-published" style="cursor: pointer;">Pubblica sul Portfolio (visibile a tutti)</label>
+                </div>
+                
+                <div style="display: flex; justify-content: flex-end; gap: 15px; margin-top: 10px;">
+                    <button id="btn-cancel" class="btn" style="background: rgba(255,255,255,0.1);">Annulla</button>
+                    <button id="btn-save" class="btn"><i class="fa-solid fa-save"></i> Salva Articolo</button>
+                </div>
+            </div>
+        </div>
+    </main>
+</div>
+
+<script src="{{ url_for('static', filename='js/cms.js') }}"></script>
+{% endblock %}

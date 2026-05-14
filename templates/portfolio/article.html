@@ -1,0 +1,61 @@
+{% extends "base.html" %}
+
+{% block title %}{{ article.title }} - Eldar Nedria{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/portfolio.css') }}">
+<style>
+    .article-container {
+        max-width: 800px;
+        margin: 40px auto;
+        padding: 40px;
+        line-height: 1.8;
+    }
+    .article-header {
+        margin-bottom: 40px;
+        text-align: center;
+        border-bottom: 1px solid rgba(255,255,255,0.1);
+        padding-bottom: 20px;
+    }
+    .article-header h1 {
+        font-size: 2.5rem;
+        margin-bottom: 15px;
+        color: var(--primary-color);
+    }
+    .article-meta {
+        opacity: 0.6;
+        font-size: 0.9rem;
+    }
+    .article-body {
+        font-size: 1.1rem;
+    }
+    .article-body h2, .article-body h3 {
+        margin-top: 30px;
+        margin-bottom: 15px;
+        color: var(--secondary-color);
+    }
+    .article-body p {
+        margin-bottom: 20px;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<nav style="padding: 20px; text-align: center;">
+    <a href="{{ url_for('portfolio.blog') }}" class="btn btn-outline"><i class="fa-solid fa-arrow-left"></i> Torna al Blog</a>
+</nav>
+
+<main class="article-container glass-panel">
+    <header class="article-header">
+        <h1>{{ article.title }}</h1>
+        <div class="article-meta">
+            <i class="fa-regular fa-calendar"></i> Pubblicato il {{ article.created_at.split(' ')[0] }}
+        </div>
+    </header>
+    
+    <div class="article-body">
+        <!-- Usa safe per permettere i tag HTML se l'editor li produce -->
+        {{ article.content | safe }}
+    </div>
+</main>
+{% endblock %}

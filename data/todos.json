@@ -1,0 +1,17 @@
+[
+    {
+        "id": 1,
+        "text": "Consegnare il progetto di fine anno",
+        "completed": false
+    },
+    {
+        "id": 2,
+        "text": "Studiare per l'esame orale",
+        "completed": true
+    },
+    {
+        "id": 3,
+        "text": "FUCILARE I DIABETICI",
+        "completed": true
+    }
+]
