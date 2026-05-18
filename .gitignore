@@ -6,3 +6,12 @@ env/
 .venv/
 .idea/
 .vscode/
+
+# Secrets
+credentials.json
+browser.json
+headers_raw.txt
+
+# Database and local state
+data/*.db
+data/*.json
