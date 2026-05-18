@@ -14,7 +14,7 @@ def create_app():
     app.config['ADMIN_PASSWORD_HASH'] = os.environ.get('ADMIN_PASSWORD_HASH')
     
     # Carica la configurazione YAML
-    with open('config.yaml', 'r', encoding='utf-8') as f:
+    with open('config/config.yaml', 'r', encoding='utf-8') as f:
         app.config['APP_CONFIG'] = yaml.safe_load(f)
 
     # Assicurati che la cartella data esista

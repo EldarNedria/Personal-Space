@@ -1,6 +1,6 @@
-# Antigravity - Personal Dashboard & Portfolio
+# Personal Space - Personal Dashboard & Portfolio
 
-Antigravity è una web application ibrida sviluppata in Python (Flask) e JavaScript vanilla che funge sia da portfolio pubblico, sia da dashboard privata modulare. Integra nativamente la gestione di task personali, appuntamenti, feed RSS, playlist musicali e include un mini-CMS interno per la pubblicazione di articoli sul blog.
+Personal Space è una web application ibrida sviluppata in Python (Flask) e JavaScript vanilla che funge sia da portfolio pubblico, sia da dashboard privata modulare. Integra nativamente la gestione di task personali, appuntamenti, feed RSS, playlist musicali e include un mini-CMS interno per la pubblicazione di articoli sul blog.
 
 ## Funzionalità
 *   **Portfolio e Blog:** Pagine statiche pubbliche per la presentazione dei progetti e degli articoli creati dal CMS. Include un form di contatto che invia payload JSON a un bot Telegram sfruttando le API ufficiali.
@@ -24,12 +24,19 @@ Antigravity è una web application ibrida sviluppata in Python (Flask) e JavaScr
 ## Architettura
 
 ```text
-Antigravity/
+Personal Space/
 ├── app.py                # Entry point: inizializza Flask e l'app factory
-├── config.yaml           # Configurazione generale dinamica (Feed RSS, Link Rapidi)
-├── database.py           # Inizializzazione DB SQLite e generazione tabelle if-not-exists
-├── generate_hash.py      # Utility script per generare salt e hash bcrypt sicuri
 ├── render.yaml           # Infrastruttura as Code per il deploy automatico su Render
+├── config/
+│   └── config.yaml       # Configurazione generale dinamica (Feed RSS, Link Rapidi)
+├── secrets/              # File sensibili e credenziali API (esclusi da git)
+│   ├── browser.json      # Token di accesso OAuth emulato per YouTube Music
+│   ├── credentials.json  # Service Account Google per Calendar e Tasks
+│   └── headers_raw.txt   # Intestazioni HTTP grezze per generare browser.json
+├── scripts/              # Script di utilità
+│   ├── generate_hash.py  # Genera salt e hash bcrypt sicuri per la password
+│   ├── setup_yt.py       # Configura l'autenticazione a YouTube Music
+│   └── test_yt.py        # Testa la connessione a YT Music
 ├── routes/               # Blueprints: separazione logica del dominio
 │   ├── auth.py           # Gestione login, checkpw bcrypt e distruzione sessioni
 │   ├── cms.py            # Logica CRUD e query SQLite per il blog
@@ -49,13 +56,13 @@ Per garantire manutenibilità e sicurezza, il codice backend Python implementa p
     L'applicazione non viene istanziata globalmente, ma tramite il design pattern *Application Factory* (funzione `create_app()` in `app.py`). Questo garantisce un perfetto isolamento del contesto e agevola la configurazione dinamica. Le rotte sono suddivise per dominio logico (`auth.py`, `dashboard.py`, `portfolio.py`, ecc.) sfruttando i **Flask Blueprints**, in modo che ciascun modulo si occupi di una singola responsabilità (Separation of Concerns).
 
 2.  **Sicurezza e Autenticazione Custom:**
-    Il sistema non memorizza password in testo in chiaro. Lo script `generate_hash.py` impiega l'algoritmo crittografico `bcrypt` per aggiungere un *salt* casuale alla password e calcolarne l'hash. Durante la fase di accesso, l'hash memorizzato in modo sicuro (`ADMIN_PASSWORD_HASH`) viene validato usando `bcrypt.checkpw()`. L'accesso alle rotte private è protetto da un decoratore personalizzato `@login_required` che verifica la presenza di uno specifico flag all'interno della sessione utente di Flask (che è a sua volta protetta da manomissioni lato client tramite firma crittografica generata usando `SECRET_KEY`).
+    Il sistema non memorizza password in testo in chiaro. Lo script `scripts/generate_hash.py` impiega l'algoritmo crittografico `bcrypt` per aggiungere un *salt* casuale alla password e calcolarne l'hash. Durante la fase di accesso, l'hash memorizzato in modo sicuro (`ADMIN_PASSWORD_HASH`) viene validato usando `bcrypt.checkpw()`. L'accesso alle rotte private è protetto da un decoratore personalizzato `@login_required` che verifica la presenza di uno specifico flag all'interno della sessione utente di Flask (che è a sua volta protetta da manomissioni lato client tramite firma crittografica generata usando `SECRET_KEY`).
 
 3.  **Integrazione OAuth2 Server-to-Server (Google API):**
-    Le chiamate verso Google Tasks e Google Calendar avvengono interamente backend-side. Anziché richiedere l'interazione umana tramite popup di consenso (OAuth2 Flow standard), il backend usa le librerie `google-auth` e `google-api-python-client` per leggere un **Service Account** (`credentials.json`). Questo permette alla libreria di firmare dei token JWT e dialogare con le API di Google in maniera invisibile e privilegiata.
+    Le chiamate verso Google Tasks e Google Calendar avvengono interamente backend-side. Anziché richiedere l'interazione umana tramite popup di consenso (OAuth2 Flow standard), il backend usa le librerie `google-auth` e `google-api-python-client` per leggere un **Service Account** (`secrets/credentials.json`). Questo permette alla libreria di firmare dei token JWT e dialogare con le API di Google in maniera invisibile e privilegiata.
 
 4.  **Bypass CORS e Proxy RSS (XML Parsing):**
-    I moderni Web Browser bloccano le richieste JavaScript verso domini esterni privi di precise intestazioni CORS (Cross-Origin Resource Sharing). Per implementare i feed, Antigravity utilizza un pattern *Proxy*: 
+    I moderni Web Browser bloccano le richieste JavaScript verso domini esterni privi di precise intestazioni CORS (Cross-Origin Resource Sharing). Per implementare i feed, Personal Space utilizza un pattern *Proxy*: 
     * Il frontend richiede asincronamente `/api/rss/nasa`.
     * Il backend Flask effettua una connessione `HTTP GET` al feed originario.
     * Tramite la libreria `xml.etree.ElementTree`, la complessa struttura ad albero XML viene decodificata e convertita.
@@ -75,7 +82,7 @@ Per garantire manutenibilità e sicurezza, il codice backend Python implementa p
 *   **Perché CSS/JS Vanilla invece di React/Tailwind?**
     L'obiettivo didattico primario del progetto era dimostrare una solida padronanza delle tecnologie web fondamentali (manipolazione del DOM, Fetch API asincrone, CSS Grid e Flexbox, variabili CSS). L'impiego di framework pesanti avrebbe astratto questi concetti, riducendo l'efficacia formativa del progetto.
 *   **Rimozione di Gridstack.js (Adattamento in corso d'opera):**
-    In fase di progettazione (come visibile anche nel diagramma originario), era previsto l'utilizzo di `gridstack.js` per un'interazione Drag & Drop avanzata. Durante lo sviluppo, tuttavia, l'aggiornamento asincrono dei widget (che modificavano il proprio DOM interno per mostrare nuove notizie o task) causava pesanti conflitti di rendering e calcolo delle altezze con la libreria. Tra l'avere una UI esteticamente trascinabile ma instabile, e una UI rigida ma funzionale, si è optato per la **stabilità**: Gridstack è stato rimosso in favore di un layout flessibile che permette semplicemente l'abilitazione/disabilitazione dei widget, accettando il compromesso visivo di eventuali gap tra le card.
+    In fase di progettazione, era previsto l'utilizzo di `gridstack.js` per un'interazione Drag & Drop avanzata. Durante lo sviluppo, tuttavia, l'aggiornamento asincrono dei widget (che modificavano il proprio DOM interno per mostrare nuove notizie o task) causava pesanti conflitti di rendering e calcolo delle altezze con la libreria. Si è optato per la **stabilità**: Gridstack è stato rimosso in favore di un layout flessibile che permette l'abilitazione/disabilitazione dei widget, accettando il compromesso visivo di eventuali gap tra le card per garantire l'affidabilità tecnica.
 
 ## Installazione locale
 
@@ -106,7 +113,7 @@ pip install -r requirements.txt
 cp .env.example .env
 
 # Genera una password sicura avviando lo script apposito:
-python generate_hash.py
+python scripts/generate_hash.py
 # Copia l'output generato (inizia con $2b$...) e incollalo nel file .env alla voce ADMIN_PASSWORD_HASH
 ```
 
@@ -118,12 +125,12 @@ flask run
 
 ## Configurazione API
 
-Essendo un aggregatore di servizi esterni, Antigravity necessita di alcune credenziali:
+Essendo un aggregatore di servizi esterni, Personal Space necessita di alcune credenziali:
 *   **Telegram Bot (Contact Form):** Configurare le chiavi `TELEGRAM_BOT_TOKEN` e `TELEGRAM_CHAT_ID` all'interno del file `.env`.
-*   **Google Calendar & Tasks:** È necessario creare un progetto su Google Cloud Console, generare le credenziali di tipo **Service Account**, abilitare le rispettive API ed esportare la chiave in un file rinominato `credentials.json` (nella root del progetto).
-*   **YouTube Music:** Copiare le richieste HTTP headers ("Accept", "Cookie", ecc.) dalla console Sviluppatori del browser e incollarle nel file `headers_raw.txt`. Eseguire lo script `python setup_yt.py` per generare l'effettivo token di accesso su `browser.json`.
+*   **Google Calendar & Tasks:** È necessario creare un progetto su Google Cloud Console, generare le credenziali di tipo **Service Account**, abilitare le rispettive API ed esportare la chiave in un file rinominato `credentials.json` e posizionato nella cartella `secrets/`.
+*   **YouTube Music:** Copiare le richieste HTTP headers ("Accept", "Cookie", ecc.) dalla console Sviluppatori del browser e incollarle nel file `secrets/headers_raw.txt`. Eseguire lo script `python scripts/setup_yt.py` per generare l'effettivo token di accesso su `secrets/browser.json`.
 
-*(I file `credentials.json` e `browser.json` sono automaticamente esclusi tramite `.gitignore` per motivi di sicurezza).*
+*(La cartella `secrets/` è automaticamente esclusa tramite `.gitignore` per motivi di sicurezza).*
 
 ## Deploy
 
@@ -131,13 +138,13 @@ Il progetto è predisposto nativamente per il deploy automatizzato sulla piattaf
 1.  Effettuare il collegamento tra il repository GitHub e la dashboard Render.
 2.  Render individuerà la configurazione come `Web Service` e imposterà il server di produzione WSGI con il comando `gunicorn app:app`.
 3.  All'interno della dashboard del progetto su Render, navigare alla scheda **Environment** e inserire manualmente i valori contenuti nel proprio file `.env` locale (in particolare `ADMIN_PASSWORD_HASH`).
-4.  **Gestione dei Segreti API:** Per trasferire `credentials.json` e `browser.json` (non presenti su GitHub), utilizzare la sezione **Secret Files** di Render per montarli in modo sicuro alla radice dell'app durante il deploy.
+4.  **Gestione dei Segreti API:** Per trasferire `credentials.json` e `browser.json` (non presenti su GitHub), utilizzare la sezione **Secret Files** di Render per montarli in modo sicuro all'interno della cartella `secrets/` dell'app durante il deploy.
 
 ## Test
 
 È stato implementato uno script di test per verificare autonomamente l'avvenuta associazione dell'account YouTube Music prima dell'avvio completo dell'applicazione server. Eseguire:
 ```bash
-python test_yt.py
+python scripts/test_yt.py
 ```
 *Le altre route API sono state verificate manualmente tramite le DevTools Network del browser e chiamate cURL.*
 
@@ -158,7 +165,7 @@ Durante lo sviluppo del progetto, sono state affrontate e risolte diverse sfide 
     *   *Soluzione (Workaround):* La libreria è stata temporaneamente rimossa per garantire la stabilità visiva. È stato adottato un sistema di "toggle" che permette di nascondere o mostrare le card, anche se ciò lascia dei *gap* vuoti nella griglia.
 *   **Autenticazione YouTube Music:**
     *   *Problema:* Le API ufficiali di YouTube Data non espongono nativamente i dati dell'applicazione YouTube Music (es. i mix personalizzati).
-    *   *Soluzione:* Si è optato per la libreria Python `ytmusicapi`, che simula una sessione browser estrapolando i cookie (`browser.json`).
+    *   *Soluzione:* Si è optato per la libreria Python `ytmusicapi`, che simula una sessione browser estrapolando i cookie (`secrets/browser.json`).
     *   *Bug Noto:* La sessione potrebbe scadere periodicamente, richiedendo l'estrazione e l'aggiornamento manuale delle intestazioni HTTP per far funzionare nuovamente il widget.
 *   **Blocchi CORS sui Feed RSS:**
     *   *Problema:* Il tentativo di leggere direttamente da frontend (tramite `fetch()`) le notizie RSS di Bloomberg e NASA veniva bloccato dai browser a causa delle policy CORS (Cross-Origin Resource Sharing).

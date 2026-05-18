@@ -47,10 +47,10 @@ def index():
 
 # 1. GOOGLE TASKS (Sostituisce i vecchi TODOs JSON)
 def get_tasks_service():
-    if not os.path.exists('credentials.json'):
+    if not os.path.exists('secrets/credentials.json'):
         return None
     SCOPES = ['https://www.googleapis.com/auth/tasks']
-    creds = service_account.Credentials.from_service_account_file('credentials.json', scopes=SCOPES)
+    creds = service_account.Credentials.from_service_account_file('secrets/credentials.json', scopes=SCOPES)
     service = build('tasks', 'v1', credentials=creds)
     return service
 
@@ -252,10 +252,10 @@ def get_rss(feed_type):
 
 # --- GOOGLE CALENDAR HELPER ---
 def get_calendar_service():
-    if not os.path.exists('credentials.json'):
+    if not os.path.exists('secrets/credentials.json'):
         return None
     SCOPES = ['https://www.googleapis.com/auth/calendar']
-    creds = service_account.Credentials.from_service_account_file('credentials.json', scopes=SCOPES)
+    creds = service_account.Credentials.from_service_account_file('secrets/credentials.json', scopes=SCOPES)
     service = build('calendar', 'v3', credentials=creds)
     return service
 
@@ -268,7 +268,7 @@ def get_calendar_events():
     
     service = get_calendar_service()
     if not service:
-        return jsonify({"error": "Credenziali Google (credentials.json) mancanti."}), 404
+        return jsonify({"error": "Credenziali Google (secrets/credentials.json) mancanti."}), 404
         
     try:
         year = request.args.get('year', type=int)

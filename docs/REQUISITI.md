@@ -1,7 +1,7 @@
 # Documento dei Requisiti
 
 ## Introduzione
-Questo documento definisce i requisiti per il progetto scolastico di fine anno per il modulo `03_Sviluppo_Web_e_Database` (e TPSIT/Sistemi e Reti). Nato come progetto personale, Antigravity è un'applicazione web ibrida che funge sia da portfolio pubblico per la presentazione delle competenze, sia da dashboard privata modulare per la produttività personale. 
+Questo documento definisce i requisiti per il progetto scolastico di fine anno per il modulo `03_Sviluppo_Web_e_Database` (e TPSIT/Sistemi e Reti). Nato come progetto personale, Personal Space è un'applicazione web ibrida che funge sia da portfolio pubblico per la presentazione delle competenze, sia da dashboard privata modulare per la produttività personale. 
 
 **Nota Architetturale:** A differenza delle classiche web application multi-utente, il sistema è progettato per un singolo amministratore. Per questo motivo, si è scelto di gestire l'autenticazione tramite validazione hash su variabile d'ambiente e di utilizzare un database SQLite leggero unito a storage JSON, ottimizzando le prestazioni ed evitando la complessità superflua di un RDBMS relazionale.
 
@@ -85,7 +85,7 @@ Questo documento definisce i requisiti per il progetto scolastico di fine anno p
 *   **UC02 Invio Messaggio Telegram:** L'utente compila nome, email e testo. Il frontend effettua una POST verso `/api/contact`. Il backend riceve i dati JSON, forma un messaggio di testo e lo inoltra tramite richiesta HTTP POST all'API ufficiale di Telegram bot, restituendo un feedback in caso di successo.
 *   **UC03 Accesso alla Dashboard:** L'utente tenta l'accesso all'area protetta e viene reindirizzato alla pagina di login. Inserisce la password; il backend esegue `bcrypt.checkpw` contro l'hash in `.env`. Se la verifica ha successo, la sessione viene inizializzata (`session['logged_in'] = True`) e l'utente reindirizzato.
 *   **UC05 Attivazione/Disattivazione Widget:** L'amministratore interagisce con un menu toggle per nascondere o mostrare i widget. Il frontend invia lo stato aggiornato all'endpoint API e il database salva la preferenza nella tabella `widget_preferences`.
-*   **UC06 Gestione Task:** L'utente scrive un nuovo obiettivo. Il frontend esegue una chiamata REST. Il backend inoltra la richiesta autenticata (via Service Account `credentials.json`) alle API Google Tasks, riceve la conferma, formatta la data in RFC 3339 e risponde al frontend per aggiornare la UI.
+*   **UC06 Gestione Task:** L'utente scrive un nuovo obiettivo. Il frontend esegue una chiamata REST. Il backend inoltra la richiesta autenticata (via Service Account `secrets/credentials.json`) alle API Google Tasks, riceve la conferma, formatta la data in RFC 3339 e risponde al frontend per aggiornare la UI.
 *   **UC07 Aggiunta Evento Calendario:** L'utente compila i campi per un nuovo evento e il sistema lo sincronizza con Google Calendar.
 *   **UC08 Gestione Articoli CMS:** L'utente accede al CMS per creare o modificare articoli del blog.
 *   **UC09 Consultazione Meteo Locale:** L'utente visualizza le informazioni meteo aggiornate automaticamente tramite le API di Open-Meteo in base alla posizione.
@@ -121,7 +121,7 @@ Questo documento definisce i requisiti per il progetto scolastico di fine anno p
 
 ```mermaid
 gantt
-    title Pianificazione Progetto Antigravity
+    title Pianificazione Progetto Personal Space
     dateFormat  YYYY-MM-DD
     section Analisi & Setup
     Analisi Requisiti & UX :a1, 2026-04-20, 5d

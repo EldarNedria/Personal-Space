@@ -8,9 +8,7 @@ env/
 .vscode/
 
 # Secrets
-credentials.json
-browser.json
-headers_raw.txt
+secrets/
 
 # Database and local state
 data/*.db

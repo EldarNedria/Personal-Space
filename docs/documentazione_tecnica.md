@@ -28,7 +28,7 @@ Il progetto mira a dimostrare le competenze acquisite nello sviluppo Full-Stack 
 ## 3. Architettura Software (Backend)
 L'applicazione backend è stata strutturata seguendo il pattern architetturale basato su moduli, sfruttando i **Flask Blueprints** per separare le responsabilità e garantire la scalabilità del codice:
 
-* `app.py`: Entry point dell'applicazione. Gestisce l'inizializzazione dell'istanza Flask, il caricamento delle configurazioni (`.env` e `config.yaml`) e la registrazione dei blueprint.
+* `app.py`: Entry point dell'applicazione. Gestisce l'inizializzazione dell'istanza Flask, il caricamento delle configurazioni (`.env` e `config/config.yaml`) e la registrazione dei blueprint.
 * `routes/portfolio.py`: Gestisce le route pubbliche (landing page).
 * `routes/auth.py`: Gestisce il flusso di autenticazione, la creazione e la distruzione delle sessioni HTTP. Verifica le credenziali confrontando l'input utente con l'hash bcrypt memorizzato in modo sicuro nelle variabili d'ambiente.
 * `routes/dashboard.py`: Contiene la logica dell'area riservata e gli **Endpoint API REST** usati dal frontend per le operazioni asincrone. La route principale è protetta dal decoratore custom `@login_required`.
@@ -55,7 +55,7 @@ Il frontend comunica costantemente con le API in background senza ricaricare la 
 ## 5. Sicurezza e Configurazioni
 * **Nessuna password in chiaro:** La password dell'amministratore è salvata come hash `bcrypt` (algoritmo asimmetrico con salt).
 * **Gestione dei Segreti:** Segreti come il `SECRET_KEY` di Flask e le credenziali risiedono in variabili d'ambiente (`.env` in locale, Env Vars nativi su Render).
-* **Configurazione Modulare:** Parametri non sensibili (come gli endpoint dei feed RSS o i link rapidi) risiedono in un file `config.yaml`, rendendo l'app dinamicamente aggiornabile senza modificare il codice sorgente.
+* **Configurazione Modulare:** Parametri non sensibili (come gli endpoint dei feed RSS o i link rapidi) risiedono in un file `config/config.yaml`, rendendo l'app dinamicamente aggiornabile senza modificare il codice sorgente.
 
 ---
 
