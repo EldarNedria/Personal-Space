@@ -1,8 +1,8 @@
 # Documentazione Tecnica: Personal Dashboard & Portfolio
 
 **Progetto di fine anno scolastico (Esame di Stato)**
-**Studente:** [Tuo Nome e Cognome]
-**Classe/Indirizzo:** 5° Anno - Informatica e Telecomunicazioni
+**Studente:** Eldar Nedria
+**Classe:**  ITIS 5M
 
 ---
 
