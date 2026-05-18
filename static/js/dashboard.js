@@ -736,9 +736,213 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     };
 
+    // --- YOUTUBE MUSIC ---
+    const ytListContainer = document.getElementById('ytmusic-list-container');
+    const ytPlayerContainer = document.getElementById('ytmusic-player-container');
+    const ytListTitle = document.getElementById('ytmusic-list-title');
+    const ytBackBtn = document.getElementById('ytmusic-back-btn');
+
+    let cachedPlaylistsHtml = '';
+    let ytPlayer = null;
+    let currentTracks = [];
+    let currentTrackIndex = -1;
+
+    // Carica YouTube IFrame API
+    const tag = document.createElement('script');
+    tag.src = "https://www.youtube.com/iframe_api";
+    const firstScriptTag = document.getElementsByTagName('script')[0];
+    firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
+
+    window.onYouTubeIframeAPIReady = function() {
+        ytPlayer = new YT.Player('ytplayer-div', {
+            height: '100%',
+            width: '100%',
+            playerVars: {
+                'autoplay': 1,
+                'controls': 1,
+                'disablekb': 1,
+                'fs': 0,
+                'rel': 0
+            },
+            events: {
+                'onStateChange': onPlayerStateChange
+            }
+        });
+    };
+
+    function onPlayerStateChange(event) {
+        // YT.PlayerState.ENDED == 0
+        if (event.data === 0) {
+            playNextTrack();
+        }
+    }
+
+    const playNextTrack = () => {
+        if (currentTrackIndex >= 0 && currentTrackIndex < currentTracks.length - 1) {
+            playYTTrackIndex(currentTrackIndex + 1);
+        }
+    };
+
+    const playPrevTrack = () => {
+        if (currentTrackIndex > 0) {
+            playYTTrackIndex(currentTrackIndex - 1);
+        }
+    };
+
+    document.getElementById('yt-btn-next')?.addEventListener('click', playNextTrack);
+    document.getElementById('yt-btn-prev')?.addEventListener('click', playPrevTrack);
+
+    const playYTTrackIndex = (index) => {
+        if (!ytPlayer || typeof ytPlayer.loadVideoById !== 'function') {
+            console.log("Player YouTube non ancora pronto");
+            return;
+        }
+        currentTrackIndex = index;
+        const track = currentTracks[index];
+        
+        document.getElementById('ytmusic-placeholder').style.display = 'none';
+        document.getElementById('ytplayer-div').style.display = 'block';
+        document.getElementById('ytmusic-controls').style.display = 'flex';
+        document.getElementById('yt-current-title').textContent = track.title;
+
+        // Highlight active track
+        document.querySelectorAll('.yt-track-item').forEach(i => i.style.background = 'rgba(255,255,255,0.03)');
+        const activeItem = document.querySelector(`.yt-track-item[data-index="${index}"]`);
+        if (activeItem) {
+            activeItem.style.background = 'rgba(255,255,255,0.1)';
+            activeItem.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        }
+
+        ytPlayer.loadVideoById(track.videoId);
+    };
+
+    const loadYTPlaylists = async () => {
+        if (!ytListContainer) return;
+        ytListTitle.innerHTML = '<i class="fa-solid fa-list-ul"></i> Le tue Playlist';
+        ytBackBtn.style.display = 'none';
+
+        if (cachedPlaylistsHtml) {
+            ytListContainer.innerHTML = cachedPlaylistsHtml;
+            attachPlaylistListeners();
+            return;
+        }
+
+        try {
+            const res = await fetch('/dashboard/music/api/playlists');
+            const data = await res.json();
+            
+            if (data.error) {
+                ytListContainer.innerHTML = `<li><div style="color: var(--warning-color); padding: 10px; text-align: center; font-size: 0.9rem;">${data.error}</div></li>`;
+                return;
+            }
+
+            if (!data || data.length === 0) {
+                ytListContainer.innerHTML = `<li><div style="opacity: 0.6; padding: 10px; text-align: center; font-size: 0.9rem;">Nessuna playlist trovata.</div></li>`;
+                return;
+            }
+
+            let html = '';
+            data.forEach(pl => {
+                const thumb = pl.thumbnails && pl.thumbnails.length > 0 ? pl.thumbnails[0].url : '';
+                const thumbHtml = thumb ? `<img src="${thumb}" alt="thumb" style="width: 40px; height: 40px; border-radius: 6px; object-fit: cover;">` : `<div style="width: 40px; height: 40px; border-radius: 6px; background: rgba(255,255,255,0.1); display: flex; align-items: center; justify-content: center;"><i class="fa-solid fa-music"></i></div>`;
+                
+                html += `
+                    <li style="display: flex; align-items: center; gap: 10px; padding: 8px; background: rgba(255,255,255,0.03); border-radius: 8px; cursor: pointer; transition: background 0.2s;" class="yt-playlist-item" data-id="${pl.playlistId}" data-title="${pl.title}">
+                        ${thumbHtml}
+                        <div style="flex: 1; min-width: 0;">
+                            <div style="font-weight: 600; font-size: 0.9rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${pl.title}</div>
+                            <div style="font-size: 0.75rem; opacity: 0.6;">${pl.count || ''}</div>
+                        </div>
+                        <i class="fa-solid fa-chevron-right" style="opacity: 0.5; font-size: 0.8rem;"></i>
+                    </li>
+                `;
+            });
+            cachedPlaylistsHtml = html;
+            ytListContainer.innerHTML = html;
+            attachPlaylistListeners();
+
+        } catch (e) {
+            console.error('Errore YTMusic:', e);
+            ytListContainer.innerHTML = `<li><div style="color: var(--danger-color); padding: 10px; text-align: center; font-size: 0.9rem;">Errore di caricamento.</div></li>`;
+        }
+    };
+
+    const attachPlaylistListeners = () => {
+        document.querySelectorAll('.yt-playlist-item').forEach(item => {
+            item.addEventListener('click', () => {
+                let playlistId = item.dataset.id;
+                let title = item.dataset.title;
+                if (playlistId.startsWith('VL')) playlistId = playlistId.substring(2);
+                loadYTPlaylistTracks(playlistId, title);
+            });
+        });
+    };
+
+    const loadYTPlaylistTracks = async (playlistId, title) => {
+        ytListTitle.innerHTML = `<i class="fa-solid fa-music"></i> ${title}`;
+        ytBackBtn.style.display = 'block';
+        ytListContainer.innerHTML = '<div class="loader"></div>';
+
+        try {
+            const res = await fetch(`/dashboard/music/api/playlist/${playlistId}`);
+            const data = await res.json();
+
+            if (data.error) {
+                ytListContainer.innerHTML = `<li><div style="color: var(--warning-color); padding: 10px; text-align: center; font-size: 0.9rem;">${data.error}</div></li>`;
+                return;
+            }
+
+            const tracks = data.tracks || [];
+            if (tracks.length === 0) {
+                ytListContainer.innerHTML = `<li><div style="opacity: 0.6; padding: 10px; text-align: center; font-size: 0.9rem;">Nessun brano trovato.</div></li>`;
+                return;
+            }
+
+            currentTracks = tracks;
+            currentTrackIndex = -1;
+
+            let html = '';
+            tracks.forEach((tr, index) => {
+                const thumb = tr.thumbnails && tr.thumbnails.length > 0 ? tr.thumbnails[0].url : '';
+                const thumbHtml = thumb ? `<img src="${thumb}" alt="thumb" style="width: 40px; height: 40px; border-radius: 6px; object-fit: cover;">` : `<div style="width: 40px; height: 40px; border-radius: 6px; background: rgba(255,255,255,0.1); display: flex; align-items: center; justify-content: center;"><i class="fa-solid fa-play"></i></div>`;
+                const artists = tr.artists ? tr.artists.map(a => a.name).join(', ') : '';
+                
+                html += `
+                    <li style="display: flex; align-items: center; gap: 10px; padding: 8px; background: rgba(255,255,255,0.03); border-radius: 8px; cursor: pointer; transition: background 0.2s;" class="yt-track-item" data-id="${tr.videoId}" data-index="${index}">
+                        ${thumbHtml}
+                        <div style="flex: 1; min-width: 0;">
+                            <div style="font-weight: 600; font-size: 0.9rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${tr.title}</div>
+                            <div style="font-size: 0.75rem; opacity: 0.6; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${artists}</div>
+                        </div>
+                        <i class="fa-solid fa-play" style="opacity: 0.5; font-size: 0.8rem;"></i>
+                    </li>
+                `;
+            });
+            ytListContainer.innerHTML = html;
+
+            document.querySelectorAll('.yt-track-item').forEach(item => {
+                item.addEventListener('click', () => {
+                    const index = parseInt(item.dataset.index);
+                    playYTTrackIndex(index);
+                });
+            });
+
+        } catch(e) {
+            console.error(e);
+            ytListContainer.innerHTML = `<li><div style="color: var(--danger-color); padding: 10px; text-align: center; font-size: 0.9rem;">Errore caricamento brani.</div></li>`;
+        }
+    };
+
+    if(ytBackBtn) {
+        ytBackBtn.addEventListener('click', () => {
+            loadYTPlaylists();
+        });
+    }
+
     // INIZIALIZZAZIONE GLOBALE
     loadWidgetPreferences();
     loadTodos();
+    loadYTPlaylists();
     loadCalendarMonth(currentCalYear, currentCalMonth);
     
     // Geolocalizzazione per il meteo

@@ -19,6 +19,7 @@
             <a href="{{ url_for('cms.cms_index') }}"><i class="fa-solid fa-newspaper"></i> Gestione Blog</a>
             <a href="#todos-widget"><i class="fa-solid fa-list-check"></i> To-Do List</a>
             <a href="#rss-widget"><i class="fa-solid fa-rss"></i> Notizie RSS</a>
+            <a href="#music-widget"><i class="fa-brands fa-youtube"></i> YouTube Music</a>
             <a href="#stats-widget"><i class="fa-solid fa-chart-line"></i> Statistiche</a>
         </nav>
         <div class="sidebar-footer">
@@ -173,6 +174,43 @@
                             class="fa-solid fa-pause"></i></button>
                     <button id="pomodoro-reset" class="btn" style="background: var(--danger-color);" title="Reset"><i
                             class="fa-solid fa-rotate-right"></i></button>
+                </div>
+            </div>
+
+            <!-- YouTube Music Widget -->
+            <div class="widget glass-panel" id="music-widget" data-widget-id="music" style="grid-row: span 2;">
+                <div class="widget-header">
+                    <h3 style="display: flex; align-items: center; gap: 8px;">
+                        <i class="fa-brands fa-youtube" style="color: #ff0000; font-size: 1.2rem;"></i> YouTube Music
+                    </h3>
+                </div>
+                
+                <div style="display: flex; flex-direction: column; height: 100%; gap: 15px; margin-top: 10px;">
+                    <!-- Player -->
+                    <div style="display: flex; flex-direction: column; gap: 5px;">
+                        <div id="ytmusic-player-container" style="width: 100%; border-radius: 12px; overflow: hidden; background: rgba(0,0,0,0.2); height: 152px; display: flex; align-items: center; justify-content: center; border: 1px solid rgba(255,255,255,0.05); box-shadow: inset 0 2px 10px rgba(0,0,0,0.2);">
+                            <div id="ytplayer-div" style="width: 100%; height: 100%; display: none;"></div>
+                            <span id="ytmusic-placeholder" style="opacity: 0.6; font-size: 0.9rem;"><i class="fa-solid fa-music"></i> Seleziona un brano</span>
+                        </div>
+                        
+                        <!-- Custom Controls -->
+                        <div id="ytmusic-controls" style="display: none; justify-content: center; align-items: center; gap: 10px; background: rgba(255,255,255,0.05); border-radius: 8px; padding: 5px 10px;">
+                            <button id="yt-btn-prev" class="btn btn-small" style="background: transparent; box-shadow: none; padding: 5px 10px;" title="Precedente"><i class="fa-solid fa-backward-step"></i></button>
+                            <div id="yt-current-title" style="flex: 1; text-align: center; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-size: 0.8rem; font-weight: 600; opacity: 0.9;"></div>
+                            <button id="yt-btn-next" class="btn btn-small" style="background: transparent; box-shadow: none; padding: 5px 10px;" title="Successivo"><i class="fa-solid fa-forward-step"></i></button>
+                        </div>
+                    </div>
+
+                    <!-- Playlist List -->
+                    <div style="flex: 1; overflow-y: auto; max-height: 250px; padding-right: 5px;" class="custom-scrollbar">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 5px;">
+                            <h4 id="ytmusic-list-title" style="font-size: 0.85rem; opacity: 0.7; margin: 0;"><i class="fa-solid fa-list-ul"></i> Le tue Playlist</h4>
+                            <button id="ytmusic-back-btn" class="btn btn-small" style="display: none; padding: 2px 8px; font-size: 0.75rem;"><i class="fa-solid fa-arrow-left"></i> Indietro</button>
+                        </div>
+                        <ul id="ytmusic-list-container" style="list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 8px;">
+                            <div class="loader"></div>
+                        </ul>
+                    </div>
                 </div>
             </div>
 

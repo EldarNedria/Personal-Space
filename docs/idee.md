@@ -2,3 +2,6 @@
 - Collegamento con telegram bot per inviare notifiche push (per cosa?)
 - Modifica grafica generale del sito
 - Dashboard Modulare Interattiva: Implementare Drag & Drop dei widget (es. con gridstack.js) e salvataggio delle posizioni/dimensioni personalizzate nel database.
+
+- Youtube Music API implementation:
+    https://ytmusicapi.readthedocs.io/en/stable/index.html
