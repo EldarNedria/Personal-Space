@@ -138,7 +138,7 @@ Il progetto è predisposto nativamente per il deploy automatizzato sulla piattaf
 1.  Effettuare il collegamento tra il repository GitHub e la dashboard Render.
 2.  Render individuerà la configurazione come `Web Service` e imposterà il server di produzione WSGI con il comando `gunicorn app:app`.
 3.  All'interno della dashboard del progetto su Render, navigare alla scheda **Environment** e inserire manualmente i valori contenuti nel proprio file `.env` locale (in particolare `ADMIN_PASSWORD_HASH`).
-4.  **Gestione dei Segreti API:** Per trasferire `credentials.json` e `browser.json` (non presenti su GitHub), utilizzare la sezione **Secret Files** di Render per montarli in modo sicuro all'interno della cartella `secrets/` dell'app durante il deploy.
+4.  **Gestione dei Segreti API:** Per trasferire `credentials.json` e `browser.json` (non presenti su GitHub), utilizzare la sezione **Secret Files** di Render per montarli in modo sicuro alla radice dell'app (`credentials.json` e `browser.json`). Il codice backend è predisposto per rilevare automaticamente la loro posizione sia in locale (`secrets/`) che in produzione su Render.
 
 ## Test
 

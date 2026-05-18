@@ -22,8 +22,9 @@ def get_ytmusic():
     if _ytmusic_instance is None:
         try:
             from ytmusicapi import YTMusic
-            if os.path.exists('secrets/browser.json'):
-                _ytmusic_instance = YTMusic('secrets/browser.json')
+            browser_path = 'secrets/browser.json' if os.path.exists('secrets/browser.json') else ('browser.json' if os.path.exists('browser.json') else None)
+            if browser_path:
+                _ytmusic_instance = YTMusic(browser_path)
             else:
                 return None
         except Exception as e:
@@ -36,7 +37,7 @@ def get_ytmusic():
 def get_playlists():
     yt = get_ytmusic()
     if not yt:
-        return jsonify({"error": "YouTube Music non configurato (secrets/browser.json mancante)."}), 404
+        return jsonify({"error": "YouTube Music non configurato (browser.json mancante)."}), 404
         
     try:
         # Fetch library playlists (limit to 10 for the widget)
