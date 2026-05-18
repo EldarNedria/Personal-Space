@@ -10,40 +10,52 @@ actor "Amministratore" as admin
 admin -|> guest
 
 ' Sistema
-rectangle "Personal Dashboard & Portfolio" {
+rectangle "Personal Space (Dashboard & Portfolio)" {
   
   ' Casi d'uso del Visitatore
   usecase "Visualizza Portfolio" as UC1
-  usecase "Effettua Login" as UC2
+  usecase "Visualizza Articoli Blog" as UC1b
+  usecase "Invia Messaggio di Contatto (Telegram)" as UC2
+  usecase "Effettua Login" as UC3
   
   ' Casi d'uso dell'Amministratore
-  usecase "Visualizza Dashboard" as UC3
-  usecase "Gestisce To-Do List" as UC4
-  usecase "Aggiunge Task" as UC4a
-  usecase "Completa/Elimina Task" as UC4b
-  usecase "Consulta Feed RSS" as UC5
-  usecase "Visualizza Widget Meteo" as UC6
-  usecase "Visualizza Statistiche" as UC7
-  usecase "Effettua Logout" as UC8
+  usecase "Visualizza Dashboard" as UC4
+  usecase "Attiva/Disattiva Widget" as UC5
+  usecase "Gestisce Google Tasks" as UC6
+  usecase "Gestisce Eventi (Google Calendar)" as UC7
+  usecase "Gestisce Articoli Blog (CMS)" as UC8
+  usecase "Consulta Meteo Locale" as UC9
+  usecase "Consulta Feed RSS" as UC10
+  usecase "Ascolta Playlist (YouTube Music)" as UC11
+  usecase "Prende Appunti (Scratchpad)" as UC12
+  usecase "Effettua Logout" as UC13
 }
 
 ' Collegamenti Visitatore
 guest --> UC1
+guest --> UC1b
 guest --> UC2
+guest --> UC3
+
+' Nota esplicativa sul cambio di ruolo
+note "Il Visitatore assume il ruolo di Amministratore\nsuccessivamente alla validazione del Login" as NoteLogin
+UC3 .. NoteLogin
+NoteLogin .. admin
 
 ' Collegamenti Amministratore
-admin --> UC3
 admin --> UC4
 admin --> UC5
 admin --> UC6
 admin --> UC7
 admin --> UC8
+admin --> UC9
+admin --> UC10
+admin --> UC11
+admin --> UC12
+admin --> UC13
 
-' Sotto-casi per la To-Do List
-UC4 <.. UC4a : <<extend>>
-UC4 <.. UC4b : <<extend>>
-
-' Dipendenze: Per vedere la dashboard o gestire i task, bisogna fare il login
-UC3 .> UC2 : <<include>>
+' Dipendenze: Per accedere alla dashboard e alle funzioni avanzate è necessario il login
+UC4 .> UC3 : <<include>>
+UC8 .> UC3 : <<include>>
 
 @enduml
