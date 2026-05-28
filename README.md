@@ -2,6 +2,8 @@
 
 Personal Space è una web application ibrida sviluppata in Python (Flask) e JavaScript vanilla che funge sia da portfolio pubblico, sia da dashboard privata modulare. Integra nativamente la gestione di task personali, appuntamenti, feed RSS, playlist musicali e include un mini-CMS interno per la pubblicazione di articoli sul blog.
 
+***Link al deploy del progetto*** : https://personal-space-hfnp.onrender.com/
+
 ## Funzionalità
 *   **Portfolio e Blog:** Pagine statiche pubbliche per la presentazione dei progetti e degli articoli creati dal CMS. Include un form di contatto che invia payload JSON a un bot Telegram sfruttando le API ufficiali.
 *   **Dashboard Modulare:** Area riservata a layout flessibile. Il sistema permette di abilitare o nascondere i widget di interesse, salvando lo stato delle preferenze sul database SQLite in background.
