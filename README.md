@@ -4,6 +4,17 @@ Personal Space è una web application ibrida sviluppata in Python (Flask) e Java
 
 ***Link al deploy del progetto*** : https://personal-space-hfnp.onrender.com/
 
+## Documentazione
+
+* **[report.md](report.md)** — report lavoro, difficoltà, lezioni aprese
+* **[README.md](README.md)** — guida completa progetto, architettura, installazione e deploy
+
+## Documentazione
+
+* **Documento_dei_requisiti.md** — analisi completa: requisiti, schema ER, diagramma delle classi, casi d'uso
+* **report.md** — report dettagliato del lavoro svolto, difficoltà e lezioni aprese
+* **assets/** — sorgenti PlantUML e immagini dei diagrammi
+
 ## Funzionalità
 *   **Portfolio e Blog:** Pagine statiche pubbliche per la presentazione dei progetti e degli articoli creati dal CMS. Include un form di contatto che invia payload JSON a un bot Telegram sfruttando le API ufficiali.
 *   **Dashboard Modulare:** Area riservata a layout flessibile. Il sistema permette di abilitare o nascondere i widget di interesse, salvando lo stato delle preferenze sul database SQLite in background.
