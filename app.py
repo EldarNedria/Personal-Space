@@ -30,12 +30,14 @@ def create_app():
     from routes.dashboard import dashboard_bp
     from routes.cms import cms_bp
     from routes.music import music_bp
+    from routes.obsidian import obsidian_bp
     
     app.register_blueprint(portfolio_bp)
     app.register_blueprint(auth_bp, url_prefix='/auth')
     app.register_blueprint(dashboard_bp, url_prefix='/dashboard')
     app.register_blueprint(cms_bp, url_prefix='/dashboard/cms')
     app.register_blueprint(music_bp, url_prefix='/dashboard/music')
+    app.register_blueprint(obsidian_bp, url_prefix='/dashboard/obsidian')
     
     return app
 

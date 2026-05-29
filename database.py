@@ -72,11 +72,20 @@ def init_db(app):
                 ('pomodoro',   'Timer Pomodoro',   'fa-stopwatch',     1, 1, 5, 1, 4),
                 ('stats',      'Statistiche',      'fa-chart-line',    1, 2, 5, 1, 4),
                 ('links',      'Link Rapidi',      'fa-link',          1, 3, 7, 1, 3),
+                ('obsidian',   'Obsidian Vault',   'fa-book-open',     1, 0, 7, 2, 6),
             ]
             cursor.executemany(
                 "INSERT INTO widget_preferences (widget_id, widget_name, widget_icon, is_enabled, pos_x, pos_y, size_w, size_h) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
                 default_widgets
             )
+        else:
+            # Assicura che il widget 'obsidian' sia presente nel DB se già popolato
+            cursor.execute("SELECT COUNT(*) FROM widget_preferences WHERE widget_id = 'obsidian'")
+            if cursor.fetchone()[0] == 0:
+                cursor.execute(
+                    "INSERT INTO widget_preferences (widget_id, widget_name, widget_icon, is_enabled, pos_x, pos_y, size_w, size_h) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
+                    ('obsidian', 'Obsidian Vault', 'fa-book-open', 1, 0, 7, 2, 6)
+                )
         
         db.commit()
         

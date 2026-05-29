@@ -939,11 +939,508 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
+
+    // --- INTEGRATION OBSIDIAN VAULT (GITHUB API BRIDGE) ---
+    let obsidianTodosSha = null;
+    let currentEditingNotePath = null;
+    let currentEditingNoteSha = null;
+
+    // Tabs switching
+    document.querySelectorAll('.obsidian-tab-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+            document.querySelectorAll('.obsidian-tab-btn').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            
+            document.querySelectorAll('#obsidian-widget .obsidian-tab-content').forEach(c => c.style.display = 'none');
+            const tabId = btn.dataset.tab;
+            const targetTab = document.getElementById(tabId);
+            if (targetTab) {
+                if (tabId === 'obsidian-todos-tab') targetTab.style.display = 'block';
+                else if (tabId === 'obsidian-notes-tab') targetTab.style.display = 'flex';
+                else if (tabId === 'obsidian-files-tab') targetTab.style.display = 'flex';
+            }
+            
+            // Reload specific tab data
+            if (tabId === 'obsidian-todos-tab') loadObsidianTodos();
+            else if (tabId === 'obsidian-notes-tab') loadObsidianNotes();
+            else if (tabId === 'obsidian-files-tab') loadObsidianAttachments();
+        });
+    });
+
+    const checkObsidianConfig = async () => {
+        try {
+            const res = await fetch('/dashboard/obsidian/api/config-check');
+            const data = await res.json();
+            if (!data.configured) {
+                document.getElementById('obsidian-main-content').style.display = 'none';
+                document.getElementById('obsidian-config-warning').style.display = 'flex';
+                document.getElementById('obsidian-repo-name').textContent = 'Non configurato';
+                return false;
+            }
+            document.getElementById('obsidian-config-warning').style.display = 'none';
+            document.getElementById('obsidian-main-content').style.display = 'flex';
+            document.getElementById('obsidian-repo-name').textContent = data.repo;
+            return true;
+        } catch (e) {
+            console.error("Errore controllo configurazione Obsidian:", e);
+            return false;
+        }
+    };
+
+    // 1. Todos logic
+    const loadObsidianTodos = async () => {
+        const list = document.getElementById('obsidian-todo-list');
+        if (!list) return;
+        list.innerHTML = '<div class="loader"></div>';
+        try {
+            const res = await fetch('/dashboard/obsidian/api/todos');
+            const data = await res.json();
+            if (data.error) {
+                list.innerHTML = `<li class="todo-item" style="color:var(--warning-color); justify-content:center;">${data.error}</li>`;
+                return;
+            }
+            obsidianTodosSha = data.sha;
+            renderObsidianTodos(data.todos);
+        } catch (e) {
+            console.error(e);
+            list.innerHTML = '<li class="todo-item" style="justify-content:center;opacity:0.5;">Errore caricamento todos.</li>';
+        }
+    };
+
+    const renderObsidianTodos = (todos) => {
+        const list = document.getElementById('obsidian-todo-list');
+        list.innerHTML = '';
+        if (!todos || todos.length === 0) {
+            list.innerHTML = '<li class="todo-item" style="justify-content:center;opacity:0.5;">Nessun todo presente nel vault Obsidian.</li>';
+            return;
+        }
+        todos.forEach(todo => {
+            const li = document.createElement('li');
+            li.className = `todo-item ${todo.completed ? 'completed' : ''}`;
+            li.innerHTML = `
+                <div style="flex: 1; min-width: 0;">
+                    <span class="todo-text">${todo.text}</span>
+                </div>
+                <div class="todo-actions">
+                    <button type="button" class="btn-check" onclick="toggleObsidianTodo(${todo.id}, ${!todo.completed})" title="${todo.completed ? 'Da fare' : 'Completa'}">
+                        <i class="fa-solid ${todo.completed ? 'fa-rotate-left' : 'fa-check'}"></i>
+                    </button>
+                    <button type="button" class="btn-delete" onclick="deleteObsidianTodo(${todo.id})" title="Elimina">
+                        <i class="fa-solid fa-trash"></i>
+                    </button>
+                </div>
+            `;
+            list.appendChild(li);
+        });
+    };
+
+    window.toggleObsidianTodo = async (id, completed) => {
+        try {
+            const res = await fetch(`/dashboard/obsidian/api/todos/${id}`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ completed })
+            });
+            const data = await res.json();
+            if (data.error) alert("Errore: " + data.error);
+            loadObsidianTodos();
+        } catch (e) {
+            console.error(e);
+        }
+    };
+
+    window.deleteObsidianTodo = async (id) => {
+        if (!confirm("Vuoi davvero eliminare questo Todo dal tuo vault Obsidian?")) return;
+        try {
+            const res = await fetch(`/dashboard/obsidian/api/todos/${id}`, {
+                method: 'DELETE'
+            });
+            const data = await res.json();
+            if (data.error) alert("Errore: " + data.error);
+            loadObsidianTodos();
+        } catch (e) {
+            console.error(e);
+        }
+    };
+
+    document.getElementById('obsidian-todo-form').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const input = document.getElementById('obsidian-todo-input');
+        const text = input.value.trim();
+        if (!text) return;
+        
+        const submitBtn = e.target.querySelector('button[type="submit"]');
+        const originalHtml = submitBtn.innerHTML;
+        submitBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i>';
+        submitBtn.disabled = true;
+        
+        try {
+            const res = await fetch('/dashboard/obsidian/api/todos', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ text })
+            });
+            const data = await res.json();
+            if (data.error) alert(data.error);
+            input.value = '';
+            loadObsidianTodos();
+        } catch (err) {
+            console.error(err);
+        } finally {
+            submitBtn.innerHTML = originalHtml;
+            submitBtn.disabled = false;
+        }
+    });
+
+    // 2. Notes logic
+    const loadObsidianNotes = async () => {
+        const list = document.getElementById('obsidian-notes-list');
+        if (!list) return;
+        list.innerHTML = '<div class="loader"></div>';
+        
+        // Riporta sempre alla lista in caso l'editor fosse aperto
+        document.getElementById('obsidian-notes-list-view').style.display = 'block';
+        document.getElementById('obsidian-note-editor-view').style.display = 'none';
+        
+        try {
+            const res = await fetch('/dashboard/obsidian/api/notes');
+            const data = await res.json();
+            if (data.error) {
+                list.innerHTML = `<li style="text-align:center;color:var(--danger-color);padding:10px;">${data.error}</li>`;
+                return;
+            }
+            renderObsidianNotes(data);
+        } catch (e) {
+            console.error(e);
+            list.innerHTML = '<li style="text-align:center;padding:10px;opacity:0.6;">Errore caricamento note.</li>';
+        }
+    };
+
+    const renderObsidianNotes = (notes) => {
+        const list = document.getElementById('obsidian-notes-list');
+        list.innerHTML = '';
+        if (!notes || notes.length === 0) {
+            list.innerHTML = '<li style="text-align:center;padding:15px;opacity:0.5;font-size:0.9rem;">Nessuna nota Markdown trovata.</li>';
+            return;
+        }
+        notes.forEach(note => {
+            const li = document.createElement('li');
+            li.style.display = 'flex';
+            li.style.justifyContent = 'space-between';
+            li.style.alignItems = 'center';
+            li.style.padding = '10px 0';
+            li.style.borderBottom = '1px solid var(--glass-border)';
+            
+            const sizeKb = (note.size / 1024).toFixed(1);
+            
+            li.innerHTML = `
+                <div style="flex: 1; min-width: 0; cursor: pointer;" onclick="openObsidianNote('${note.path}')">
+                    <a href="javascript:void(0)" style="font-weight:600; text-decoration:none; color:inherit; font-size:0.9rem; display:block; margin-bottom: 2px;">${note.name}</a>
+                    <span style="font-size:0.75rem; opacity:0.6;"><i class="fa-regular fa-hard-drive"></i> ${sizeKb} KB</span>
+                </div>
+                <div class="todo-actions">
+                    <button type="button" class="btn-delete" onclick="deleteObsidianNote('${note.path}', '${note.sha}')" title="Elimina nota">
+                        <i class="fa-solid fa-trash"></i>
+                    </button>
+                </div>
+            `;
+            list.appendChild(li);
+        });
+    };
+
+    window.openObsidianNote = async (path) => {
+        const editorTextarea = document.getElementById('obsidian-editor-textarea');
+        const editorTitle = document.getElementById('obsidian-editor-filename');
+        
+        editorTitle.textContent = path.split('/').pop();
+        editorTextarea.value = 'Caricamento contenuto nota...';
+        
+        document.getElementById('obsidian-notes-list-view').style.display = 'none';
+        document.getElementById('obsidian-note-editor-view').style.display = 'flex';
+        
+        currentEditingNotePath = path;
+        currentEditingNoteSha = null;
+        
+        try {
+            const res = await fetch(`/dashboard/obsidian/api/notes/content?path=${encodeURIComponent(path)}`);
+            const data = await res.json();
+            if (data.error) {
+                editorTextarea.value = "Errore nel caricamento: " + data.error;
+                return;
+            }
+            editorTextarea.value = data.content;
+            currentEditingNoteSha = data.sha;
+        } catch (e) {
+            console.error(e);
+            editorTextarea.value = "Errore di connessione server.";
+        }
+    };
+
+    window.deleteObsidianNote = async (path, sha) => {
+        const name = path.split('/').pop();
+        if (!confirm(`Sei sicuro di voler eliminare la nota "${name}" dal tuo vault Obsidian?`)) return;
+        
+        try {
+            const res = await fetch(`/dashboard/obsidian/api/notes/delete?path=${encodeURIComponent(path)}&sha=${sha}`, {
+                method: 'DELETE'
+            });
+            const data = await res.json();
+            if (data.error) alert("Errore: " + data.error);
+            loadObsidianNotes();
+        } catch (e) {
+            console.error(e);
+        }
+    };
+
+    document.getElementById('obsidian-editor-back').addEventListener('click', () => {
+        document.getElementById('obsidian-note-editor-view').style.display = 'none';
+        document.getElementById('obsidian-notes-list-view').style.display = 'block';
+        loadObsidianNotes();
+    });
+
+    document.getElementById('obsidian-editor-save').addEventListener('click', async () => {
+        if (!currentEditingNotePath) return;
+        const saveBtn = document.getElementById('obsidian-editor-save');
+        const originalHtml = saveBtn.innerHTML;
+        saveBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Salva';
+        saveBtn.disabled = true;
+        
+        const content = document.getElementById('obsidian-editor-textarea').value;
+        
+        try {
+            const res = await fetch('/dashboard/obsidian/api/notes/content', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    path: currentEditingNotePath,
+                    content: content,
+                    sha: currentEditingNoteSha
+                })
+            });
+            const data = await res.json();
+            if (data.error) {
+                alert("Errore nel salvataggio: " + data.error);
+            } else {
+                currentEditingNoteSha = data.sha;
+                saveBtn.innerHTML = '<i class="fa-solid fa-check"></i> Salvato!';
+                setTimeout(() => {
+                    saveBtn.innerHTML = originalHtml;
+                    saveBtn.disabled = false;
+                }, 1500);
+                return;
+            }
+        } catch (e) {
+            console.error(e);
+            alert("Errore di connessione.");
+        }
+        saveBtn.innerHTML = originalHtml;
+        saveBtn.disabled = false;
+    });
+
+    document.getElementById('obsidian-new-note-btn').addEventListener('click', async () => {
+        const noteName = prompt("Inserisci il nome della nota (senza .md):");
+        if (!noteName) return;
+        
+        const sanitizedName = noteName.trim().replace(/[/\\?%*:|"<>]/g, '-');
+        if (!sanitizedName) return;
+        
+        const resConfig = await fetch('/dashboard/obsidian/api/config-check');
+        const configData = await resConfig.json();
+        const prefix = configData.notes_path ? configData.notes_path + '/' : '';
+        const fullPath = `${prefix}${sanitizedName}.md`;
+        
+        const content = `---\ntitle: ${sanitizedName}\ncreated: ${new Date().toISOString()}\n---\n\n# ${sanitizedName}\n\n`;
+        
+        try {
+            const res = await fetch('/dashboard/obsidian/api/notes/content', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    path: fullPath,
+                    content: content
+                })
+            });
+            const data = await res.json();
+            if (data.error) {
+                alert("Errore creazione nota: " + data.error);
+            } else {
+                await loadObsidianNotes();
+                openObsidianNote(fullPath);
+            }
+        } catch (e) {
+            console.error(e);
+        }
+    });
+
+    // 3. Attachments logic
+    const loadObsidianAttachments = async () => {
+        const grid = document.getElementById('obsidian-attachments-grid');
+        if (!grid) return;
+        grid.innerHTML = '<div class="loader"></div>';
+        
+        try {
+            const res = await fetch('/dashboard/obsidian/api/attachments');
+            const data = await res.json();
+            if (data.error) {
+                grid.innerHTML = `<p style="text-align:center;color:var(--danger-color);font-size:0.85rem;">${data.error}</p>`;
+                return;
+            }
+            renderObsidianAttachments(data);
+        } catch (e) {
+            console.error(e);
+            grid.innerHTML = '<p style="text-align:center;opacity:0.6;font-size:0.85rem;">Errore caricamento allegati.</p>';
+        }
+    };
+
+    const renderObsidianAttachments = (files) => {
+        const grid = document.getElementById('obsidian-attachments-grid');
+        grid.innerHTML = '';
+        if (!files || files.length === 0) {
+            grid.innerHTML = '<p style="text-align:center;opacity:0.5;font-size:0.85rem;padding:10px;">Nessun allegato presente nel vault.</p>';
+            return;
+        }
+        
+        files.forEach(file => {
+            const item = document.createElement('div');
+            item.className = 'obsidian-file-item';
+            
+            const ext = file.name.split('.').pop().toLowerCase();
+            let icon = 'fa-file';
+            if (['png', 'jpg', 'jpeg', 'gif', 'svg', 'webp'].includes(ext)) icon = 'fa-file-image';
+            else if (ext === 'pdf') icon = 'fa-file-pdf';
+            else if (['doc', 'docx', 'txt', 'rtf'].includes(ext)) icon = 'fa-file-word';
+            else if (['zip', 'rar', 'tar', 'gz', '7z'].includes(ext)) icon = 'fa-file-zipper';
+            
+            const sizeMb = (file.size / (1024 * 1024)).toFixed(2);
+            const sizeStr = sizeMb > 0.1 ? `${sizeMb} MB` : `${(file.size / 1024).toFixed(1)} KB`;
+            
+            item.innerHTML = `
+                <div class="obsidian-file-info">
+                    <i class="fa-solid ${icon}"></i>
+                    <div style="min-width: 0; display: flex; flex-direction: column;">
+                        <span class="obsidian-file-name" title="${file.name}">${file.name}</span>
+                        <span class="obsidian-file-size">${sizeStr}</span>
+                    </div>
+                </div>
+                <div class="obsidian-file-actions">
+                    <a href="${file.download_url}" target="_blank" title="Scarica file"><i class="fa-solid fa-download"></i></a>
+                    <button type="button" class="btn-delete" onclick="deleteObsidianAttachment('${file.path}', '${file.sha}')" title="Elimina"><i class="fa-solid fa-trash"></i></button>
+                </div>
+            `;
+            grid.appendChild(item);
+        });
+    };
+
+    window.deleteObsidianAttachment = async (path, sha) => {
+        const name = path.split('/').pop();
+        if (!confirm(`Sei sicuro di voler eliminare permanentemente "${name}" dal tuo vault Obsidian?`)) return;
+        
+        try {
+            const res = await fetch('/dashboard/obsidian/api/attachments', {
+                method: 'DELETE',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ path, sha })
+            });
+            const data = await res.json();
+            if (data.error) alert("Errore: " + data.error);
+            loadObsidianAttachments();
+        } catch (e) {
+            console.error(e);
+        }
+    };
+
+    // File Drag and Drop zone
+    const uploadZone = document.getElementById('obsidian-upload-zone');
+    const fileInput = document.getElementById('obsidian-file-input');
+
+    if (uploadZone && fileInput) {
+        uploadZone.addEventListener('click', () => fileInput.click());
+        
+        uploadZone.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            uploadZone.classList.add('dragover');
+        });
+        
+        uploadZone.addEventListener('dragleave', () => {
+            uploadZone.classList.remove('dragover');
+        });
+        
+        uploadZone.addEventListener('drop', (e) => {
+            e.preventDefault();
+            uploadZone.classList.remove('dragover');
+            if (e.dataTransfer.files.length > 0) {
+                handleObsidianFileUpload(e.dataTransfer.files[0]);
+            }
+        });
+        
+        fileInput.addEventListener('change', (e) => {
+            if (e.target.files.length > 0) {
+                handleObsidianFileUpload(e.target.files[0]);
+            }
+        });
+    }
+
+    const handleObsidianFileUpload = async (file) => {
+        if (file.size > 10 * 1024 * 1024) {
+            alert("Il file supera il limite massimo di 10MB per l'upload tramite API.");
+            return;
+        }
+        
+        const dropText = uploadZone.querySelector('p');
+        const originalText = dropText.textContent;
+        dropText.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> Caricamento in corso...`;
+        uploadZone.style.pointerEvents = 'none';
+        
+        const reader = new FileReader();
+        reader.readAsDataURL(file);
+        reader.onload = async () => {
+            const base64Content = reader.result.split(',')[1];
+            
+            try {
+                const res = await fetch('/dashboard/obsidian/api/attachments', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        filename: file.name,
+                        content: base64Content
+                    })
+                });
+                const data = await res.json();
+                if (data.error) {
+                    alert("Errore nel caricamento del file: " + data.error);
+                } else {
+                    loadObsidianAttachments();
+                }
+            } catch (e) {
+                console.error(e);
+                alert("Errore durante il caricamento del file.");
+            } finally {
+                dropText.textContent = originalText;
+                uploadZone.style.pointerEvents = 'auto';
+                fileInput.value = '';
+            }
+        };
+        reader.onerror = (error) => {
+            console.error("FileReader error:", error);
+            dropText.textContent = originalText;
+            uploadZone.style.pointerEvents = 'auto';
+            fileInput.value = '';
+        };
+    };
+
+    const initObsidianWidget = async () => {
+        const isConfigured = await checkObsidianConfig();
+        if (isConfigured) {
+            loadObsidianTodos();
+        }
+    };
+
     // INIZIALIZZAZIONE GLOBALE
     loadWidgetPreferences();
     loadTodos();
     loadYTPlaylists();
     loadCalendarMonth(currentCalYear, currentCalMonth);
+    initObsidianWidget();
     
     // Geolocalizzazione per il meteo
     if ("geolocation" in navigator) {

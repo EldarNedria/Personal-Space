@@ -536,3 +536,124 @@
     margin: 0;
     border: none;
 }
+
+/* --- OBSIDIAN WIDGET STYLING --- */
+.obsidian-tab-btn {
+    background: transparent;
+    border: none;
+    border-bottom: 2px solid transparent;
+    color: var(--text-color);
+    opacity: 0.6;
+    padding: 8px 12px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: var(--transition);
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+.obsidian-tab-btn:hover {
+    opacity: 0.9;
+}
+.obsidian-tab-btn.active {
+    opacity: 1;
+    color: var(--primary-color);
+    border-bottom-color: var(--primary-color);
+}
+
+.obsidian-warning-panel {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    border: 1px dashed var(--glass-border);
+    border-radius: 12px;
+    background: rgba(239, 68, 68, 0.03);
+    margin: 20px 0;
+    padding: 25px;
+    text-align: center;
+}
+
+.obsidian-upload-zone {
+    border: 2px dashed var(--glass-border);
+    border-radius: 12px;
+    padding: 25px;
+    text-align: center;
+    background: rgba(255, 255, 255, 0.01);
+    transition: var(--transition);
+    cursor: pointer;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+}
+.obsidian-upload-zone:hover, .obsidian-upload-zone.dragover {
+    border-color: var(--primary-color);
+    background: rgba(59, 130, 246, 0.05);
+    box-shadow: 0 0 15px rgba(59, 130, 246, 0.1);
+}
+
+.obsidian-attachments-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+.obsidian-file-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 12px;
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid var(--glass-border);
+    border-radius: 8px;
+    transition: var(--transition);
+}
+.obsidian-file-item:hover {
+    background: rgba(255, 255, 255, 0.06);
+}
+.obsidian-file-info {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 0.85rem;
+    font-weight: 500;
+    min-width: 0;
+}
+.obsidian-file-info i {
+    color: var(--primary-color);
+    font-size: 1rem;
+}
+.obsidian-file-name {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+.obsidian-file-size {
+    font-size: 0.75rem;
+    opacity: 0.5;
+}
+.obsidian-file-actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+.obsidian-file-actions a, .obsidian-file-actions button {
+    background: transparent;
+    border: none;
+    color: var(--text-color);
+    opacity: 0.6;
+    cursor: pointer;
+    padding: 4px;
+    font-size: 0.85rem;
+    transition: var(--transition);
+    text-decoration: none;
+}
+.obsidian-file-actions a:hover, .obsidian-file-actions button:hover {
+    opacity: 1;
+}
+.obsidian-file-actions .btn-delete:hover {
+    color: var(--danger-color);
+}
+
