@@ -1,6 +1,6 @@
 # Personal Space - Personal Dashboard & Portfolio
 
-Personal Space è una web application ibrida sviluppata in Python (Flask) e JavaScript vanilla che funge sia da portfolio pubblico, sia da dashboard privata modulare. Integra nativamente la gestione di task personali, appuntamenti, feed RSS, playlist musicali e include un mini-CMS interno per la pubblicazione di articoli sul blog.
+Personal Space è una web application ibrida sviluppata in Python (Flask) e JavaScript vanilla che funge sia da portfolio pubblico, sia da dashboard privata modulare. Integra nativamente la gestione di task personali, appuntamenti, feed RSS, playlist musicali, sincronizzazione con Obsidian (note, todo e allegati via API GitHub) e include un mini-CMS interno per la pubblicazione di articoli sul blog.
 
 ***Link al deploy del progetto*** : https://personal-space-hfnp.onrender.com/
 
@@ -19,6 +19,7 @@ Personal Space è una web application ibrida sviluppata in Python (Flask) e Java
 *   **Portfolio e Blog:** Pagine statiche pubbliche per la presentazione dei progetti e degli articoli creati dal CMS. Include un form di contatto che invia payload JSON a un bot Telegram sfruttando le API ufficiali.
 *   **Dashboard Modulare:** Area riservata a layout flessibile. Il sistema permette di abilitare o nascondere i widget di interesse, salvando lo stato delle preferenze sul database SQLite in background.
 *   **Integrazione Google Tasks e Calendar:** Sincronizzazione CRUD in tempo reale con gli account Google tramite autenticazione Service Account (OAuth2 Server-to-Server).
+*   **Integrazione Obsidian Vault (GitHub API Bridge):** Workspace dedicato a schermo intero per la gestione delle note Markdown, sincronizzazione delle checklist di Todo e caricamento di allegati (immagini, PDF, documenti) direttamente sul tuo vault Obsidian privato ospitato su GitHub.
 *   **News RSS Aggregator:** Parsing XML lato server di molteplici feed esterni (NASA, Bloomberg) tramite `xml.etree.ElementTree` per bypassare le policy CORS dei browser ed esporre un JSON pulito al frontend.
 *   **YouTube Music API:** Interfaccia per estrapolare e riprodurre le playlist musicali private dell'utente tramite la libreria `ytmusicapi`, sfruttando l'autenticazione via intestazioni HTTP emulate (`browser.json`).
 *   **CMS Interno:** Pannello di amministrazione backend protetto da autenticazione per la stesura, formattazione e gestione dello stato (Bozza/Pubblicato) degli articoli visibili sul portfolio pubblico.
@@ -31,7 +32,7 @@ Personal Space è una web application ibrida sviluppata in Python (Flask) e Java
 | **Database** | SQLite (Layout & CMS) + JSON locale (Dati Cache) |
 | **Frontend** | HTML5, CSS3 (Vanilla + Variabili), JavaScript ES6+ |
 | **Real-time / UI** | Fetch API (AJAX) |
-| **API Esterne** | Google Cloud (Tasks/Calendar), YouTube Music API, Telegram Bot API |
+| **API Esterne** | Google Cloud (Tasks/Calendar), YouTube Music API, Telegram Bot API, GitHub REST API (Obsidian Sync) |
 | **Deploy** | Render.com (PaaS), Gunicorn (WSGI Server) |
 
 ## Architettura
@@ -55,9 +56,21 @@ Personal Space/
 │   ├── cms.py            # Logica CRUD e query SQLite per il blog
 │   ├── dashboard.py      # Endpoint API JSON usati per l'aggiornamento asincrono dei widget
 │   ├── music.py          # Wrapper per le chiamate esterne verso YouTube Music API
+│   ├── obsidian.py       # Wrapper API GitHub per leggere/scrivere note, todo e allegati di Obsidian
 │   └── portfolio.py      # Rendering dei template pubblici e invio POST Telegram
 ├── static/               # Assets frontend: CSS (Vanilla) e JavaScript (DOM Manipulation)
+│   ├── css/
+│   │   ├── dashboard.css
+│   │   ├── obsidian.css  # Stile per l'area di lavoro a schermo intero Obsidian
+│   │   └── ...
+│   └── js/
+│   │   ├── dashboard.js
+│   │   ├── obsidian_page.js # Controller AJAX per la navigazione note, anteprima markdown e upload file
+│   │   └── ...
 ├── templates/            # Template Engine (Jinja2)
+│   └── dashboard/
+│       ├── obsidian.html # Template a schermo intero per l'editor Obsidian
+│       └── ...
 └── data/                 # Directory per il database locale `database.db` (non tracciata su git)
 ```
 
@@ -171,6 +184,11 @@ Durante la creazione del servizio su Render (o nella scheda **Environment** del 
 | `ADMIN_PASSWORD_HASH` | Hash Bcrypt della password dell'amministratore. | Generato localmente eseguendo lo script `python scripts/generate_hash.py` |
 | `TELEGRAM_BOT_TOKEN` | Token del bot Telegram per il form dei contatti. | *(Opzionale)* Ottenuto da [@BotFather](https://t.me/BotFather) |
 | `TELEGRAM_CHAT_ID` | Il tuo ID utente o canale Telegram. | *(Opzionale)* Il tuo ID numerico per ricevere i messaggi |
+| `OBSIDIAN_GITHUB_REPO` | Repository GitHub privato contenente il tuo Vault. | Es. `NedriaEldar/ObsVault1` |
+| `OBSIDIAN_GITHUB_TOKEN` | GitHub Personal Access Token (PAT) Fine-grained. | Con permessi `Read and write` su `Contents` |
+| `OBSIDIAN_TODO_FILE` | File markdown utilizzato per la lista dei Todo. | Opzionale, valore di default `Todos.md` |
+| `OBSIDIAN_NOTES_PATH` | Cartella del Vault da cui elencare e leggere le note. | Opzionale, valore di default root `""` |
+| `OBSIDIAN_ATTACHMENTS_PATH` | Cartella in cui salvare i file caricati dalla dashboard. | Opzionale, valore di default `Attachments` |
 
 #### Caricamento delle Credenziali API (Secret Files)
 I file di autenticazione per le API esterne (`credentials.json` per Google e `browser.json` per YouTube Music) non devono essere tracciati su Git. Su Render, puoi caricarli in modo sicuro tramite la funzionalità **Secret Files**:
@@ -309,5 +327,5 @@ Il progetto è stato concepito con una struttura scalabile, lasciando spazio a i
 3.  **Ottimizzazione Autenticazione Musicale:** Testare metodi alternativi o più stabili per l'autenticazione a YouTube Music, in modo da evitare il reinserimento manuale dei cookie di sessione.
 4.  **Espansione delle Funzionalità (Nuovi Widget):**
     *   Widget "Wikipedia Daily Facts" (La curiosità o la pagina in evidenza del giorno).
-    *   Migrazione del widget *Scratchpad* (Appunti rapidi) per fare in modo che il testo venga salvato direttamente sul server (tramite SQLite) e non solo sul device locale.
-5.  **Studio Sistemistico Avanzato:** Sperimentare il deploy dell'applicazione non più su un PaaS gestito come Render.com, ma su un'infrastruttura **IaaS (Infrastructure as a Service)** configurando da zero una macchina virtuale Linux tramite **Oracle Cloud Free Tier** (setup di Nginx come reverse proxy, configurazione di un dominio, gestione certificati SSL e demoni systemd).
+    *   *Widget Scratchpad (Completato):* Sostituito con successo dall'integrazione a schermo intero con **Obsidian Vault** e GitHub API Bridge.
+5.  **Studio Sistemistico Avanzato:** Sperimentare il deploy dell'applicazione non più su un PaaS gestito come Render.com, ma su un'infrastruttura **IaaS (Infrastructure as a Service)** configurando da zero una macchina virtuale Linux tramite **Oracle Cloud Free Tier** (setup di Nginx como reverse proxy, configurazione di un dominio, gestione certificati SSL e demoni systemd).

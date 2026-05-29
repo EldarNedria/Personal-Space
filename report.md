@@ -55,6 +55,7 @@ Sviluppo di una Web Application Full-Stack in Python (Flask) e JavaScript vanill
 10. **REQ-D05:** Il sistema effettua il parsing XML di Feed RSS esterni ed espone un'API JSON pulita per la lettura delle ultime notizie.
 11. **REQ-D06:** Il sistema estrapola le playlist personali dell'amministratore tramite le librerie `ytmusicapi`.
 12. **REQ-D07 (CMS):** Il sistema espone un pannello per creare, modificare, eliminare e gestire la visibilità degli articoli del blog.
+13. **REQ-D08:** Il sistema permette di visualizzare, creare, modificare ed eliminare note Markdown nel proprio Obsidian Vault privato sincronizzato tramite **GitHub REST API**, inclusa la spunta dei todo e il caricamento di allegati.
 
 ### 4.2 User Stories
 *   **Come Visitatore**, voglio consultare la sezione blog e leggere gli articoli, così posso approfondire le conoscenze tecniche dell'autore.
@@ -62,13 +63,14 @@ Sviluppo di una Web Application Full-Stack in Python (Flask) e JavaScript vanill
 *   **Come Amministratore**, voglio poter nascondere i widget che non utilizzo, così da mantenere la mia area di lavoro pulita e concentrarmi sulle informazioni essenziali.
 *   **Come Amministratore**, voglio aggiungere rapidamente un task dalla dashboard, così che sia immediatamente salvato e visibile anche sull'app mobile di Google Tasks.
 *   **Come Amministratore**, voglio scrivere una bozza di un articolo dal CMS e decidere in un secondo momento se pubblicarlo, così da poter preparare i contenuti con calma.
+*   **Come Amministratore**, voglio poter visualizzare e modificare le mie note Obsidian direttamente dal web, così da non dover usare un client locale quando sono fuori casa.
 
 ## 5. Requisiti non funzionali
 
-*   **Sicurezza:** Implementazione di meccanismi crittografici per le password (nessun testo in chiaro salvato) tramite l'algoritmo **Bcrypt**. Protezione intrinseca delle route sensibili tramite decoratore backend `@login_required`. Archiviazione dei segreti API (Google Service Account, chiavi Render, Bot Telegram) strettamente in variabili d'ambiente e secret files ignorati dal controllo di versione.
-*   **Architettura Backend:** Sviluppo basato sul pattern **Application Factory** e sull'uso intensivo dei **Flask Blueprints** per separare nettamente le aree dell'applicazione (Auth, Portfolio, Dashboard, CMS, Music).
-*   **Asincronismo e Real-time (AJAX):** Tutte le operazioni della dashboard (lettura feed, update layout, gestione task) avvengono in background tramite `Fetch API` JavaScript, garantendo un'esperienza fluida da "Single Page Application" all'interno della dashboard, senza mai ricaricare la pagina.
-*   **Persistenza Dati Ibrida:** Utilizzo di **SQLite** (`database.db`) con Row Factory per gestire dati strutturati (Articoli CMS, Coordinate Layout Widget) combinato a un approccio stateless per i dati provenienti in tempo reale dalle API esterne.
+*   **Sicurezza:** Implementazione di meccanismi crittografici per le password (nessun testo in chiaro salvato) tramite l'algoritmo **Bcrypt**. Protezione intrinseca delle route sensibili tramite decoratore backend `@login_required`. Archiviazione dei segreti API (Google Service Account, chiavi Render, Bot Telegram, GitHub PAT) strettamente in variabili d'ambiente e secret files ignorati dal controllo di versione.
+*   **Architettura Backend:** Sviluppo basato sul pattern **Application Factory** e sull'uso intensivo dei **Flask Blueprints** per separare nettamente le aree dell'applicazione (Auth, Portfolio, Dashboard, CMS, Music, Obsidian).
+*   **Asincronismo e Real-time (AJAX):** Tutte le operazioni della dashboard (lettura feed, update layout, gestione task, salvataggio note Obsidian, upload allegati) avvengono in background tramite `Fetch API` JavaScript, garantendo un'esperienza fluida da "Single Page Application" all'interno della dashboard, senza mai ricaricare la pagina.
+*   **Persistenza Dati Ibrida:** Utilizzo di **SQLite** (`database.db`) con Row Factory per gestire dati strutturati (Articoli CMS, Coordinate Layout Widget) combinato a un approccio stateless per i dati provenienti in tempo reale dalle API esterne o integrato tramite bridge API (es. GitHub per Obsidian Vault).
 *   **Deploy:** Piena compatibilità di esecuzione in container o PaaS moderni (es. **Render.com**) tramite application server di produzione WSGI (`gunicorn`).
 *   **UI/UX Adattiva:** Design responsive vanilla CSS con variabili custom (`:root`), supporto al tema Chiaro/Scuro integrato e layout a griglia flessibile.
 
@@ -88,7 +90,7 @@ Sviluppo di una Web Application Full-Stack in Python (Flask) e JavaScript vanill
 | **UC08** | Gestione Articoli CMS | Amministratore |
 | **UC09** | Consultazione Meteo Locale | Amministratore |
 | **UC10** | Lettura Notizie RSS | Amministratore |
-| **UC11** | Salvataggio Appunti Rapidi (Scratchpad) | Amministratore |
+| **UC11** | Gestione Obsidian Vault (GitHub API Sync) | Amministratore |
 | **UC12** | Riproduzione YouTube Music | Amministratore |
 
 ### 6.2 Descrizione semplificata dei casi d'uso
@@ -102,7 +104,7 @@ Sviluppo di una Web Application Full-Stack in Python (Flask) e JavaScript vanill
 *   **UC08 Gestione Articoli CMS:** L'utente accede al CMS per creare o modificare articoli del blog.
 *   **UC09 Consultazione Meteo Locale:** L'utente visualizza le informazioni meteo aggiornate automaticamente tramite le API di Open-Meteo in base alla posizione.
 *   **UC10 Lettura Notizie RSS:** Il sistema esegue il parsing XML dei feed impostati e mostra all'utente gli ultimi articoli.
-*   **UC11 Salvataggio Appunti Rapidi:** L'utente annota testi veloci nello Scratchpad, i quali vengono salvati localmente.
+*   **UC11 Gestione Obsidian Vault:** L'utente naviga nel Vault Obsidian a schermo intero o tramite widget, legge/crea/modifica le note Markdown, spunta le checklist di Todo o carica allegati. Ogni modifica innesca un commit automatico sul repository GitHub privato tramite GitHub REST API.
 *   **UC12 Riproduzione YouTube Music:** L'utente interagisce con il widget per visualizzare e ascoltare le playlist estratte dal proprio account tramite ytmusicapi.
 
 ### 6.3 Relazioni tra casi d'uso: include ed extend
@@ -221,21 +223,41 @@ classDiagram
         +update_article()
         +delete_article()
     }
+
+    class Blueprint_Obsidian {
+        +vault_home()
+        +list_notes()
+        +get_note()
+        +save_note()
+        +delete_note()
+        +upload_attachment()
+        +toggle_todo()
+    }
     
     class GoogleAPIService {
         -credentials: ServiceAccount
         +build(service, version)
     }
 
+    class GitHubAPIService {
+        -token: str
+        -repo: str
+        +make_request(endpoint, method, data)
+    }
+
     FlaskApp --> DatabaseModule : Initializes
     FlaskApp --> Blueprint_Auth : Registers
     FlaskApp --> Blueprint_Dashboard : Registers
     FlaskApp --> Blueprint_CMS : Registers
+    FlaskApp --> Blueprint_Obsidian : Registers
     
     Blueprint_Dashboard ..> Blueprint_Auth : Uses login_required
     Blueprint_CMS ..> Blueprint_Auth : Uses login_required
+    Blueprint_Obsidian ..> Blueprint_Auth : Uses login_required
     
     Blueprint_Dashboard --> DatabaseModule : Reads/Writes Widget Prefs
     Blueprint_CMS --> DatabaseModule : Reads/Writes Articles
     Blueprint_Dashboard --> GoogleAPIService : Authenticates APIs
+    Blueprint_Obsidian --> GitHubAPIService : Interfaces with
+```
 ```
