@@ -1,0 +1,214 @@
+/* --- OBSIDIAN WORKSPACE STYLING --- */
+
+/* Sidebar Section Title */
+.sidebar-section-title {
+    margin-top: 15px;
+    margin-bottom: 8px;
+    color: var(--text-color);
+}
+
+/* Sidebar Custom Scrollbar */
+.custom-scrollbar::-webkit-scrollbar {
+    width: 6px;
+}
+.custom-scrollbar::-webkit-scrollbar-track {
+    background: transparent;
+}
+.custom-scrollbar::-webkit-scrollbar-thumb {
+    background: rgba(128, 128, 128, 0.2);
+    border-radius: 3px;
+}
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+    background: rgba(128, 128, 128, 0.4);
+}
+
+/* Sidebar items list */
+#obsidian-page-notes-list, #obsidian-page-files-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+#obsidian-page-notes-list li, #obsidian-page-files-list li {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px 15px;
+    margin-bottom: 4px;
+    border-radius: 8px;
+    transition: var(--transition);
+    cursor: pointer;
+    background: rgba(255, 255, 255, 0.02);
+    border: 1px solid transparent;
+}
+#obsidian-page-notes-list li:hover, #obsidian-page-files-list li:hover {
+    background: rgba(59, 130, 246, 0.06);
+    border-color: rgba(59, 130, 246, 0.15);
+}
+#obsidian-page-notes-list li.active {
+    background: rgba(59, 130, 246, 0.12);
+    border-color: var(--primary-color);
+    font-weight: 600;
+}
+#obsidian-page-notes-list li.active a {
+    color: var(--primary-color);
+}
+
+#obsidian-page-notes-list a, #obsidian-page-files-list a {
+    color: var(--text-color);
+    text-decoration: none;
+    font-size: 0.85rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    flex: 1;
+}
+
+#obsidian-page-notes-list .note-item-info, #obsidian-page-files-list .file-item-info {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    min-width: 0;
+    flex: 1;
+}
+#obsidian-page-notes-list .note-item-info i, #obsidian-page-files-list .file-item-info i {
+    color: var(--primary-color);
+    font-size: 0.95rem;
+}
+
+#obsidian-page-notes-list .btn-delete, #obsidian-page-files-list .btn-delete {
+    opacity: 0;
+    transition: opacity 0.2s ease, color 0.2s ease;
+    background: transparent;
+    border: none;
+    color: var(--text-color);
+    cursor: pointer;
+    padding: 4px;
+}
+#obsidian-page-notes-list li:hover .btn-delete, #obsidian-page-files-list li:hover .btn-delete {
+    opacity: 0.6;
+}
+#obsidian-page-notes-list li:hover .btn-delete:hover, #obsidian-page-files-list li:hover .btn-delete:hover {
+    opacity: 1;
+    color: var(--danger-color);
+}
+
+/* Mode toggles */
+.mode-toggle-btn {
+    background: transparent;
+    border: none;
+    color: var(--text-color);
+    opacity: 0.6;
+    padding: 6px 14px;
+    border-radius: 4px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: var(--transition);
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+.mode-toggle-btn:hover {
+    opacity: 0.9;
+}
+.mode-toggle-btn.active {
+    background: var(--primary-color);
+    color: white;
+    opacity: 1;
+}
+
+/* --- MARKDOWN RENDERING PREVIEW STYLES --- */
+.markdown-preview {
+    color: var(--text-color);
+    font-size: 0.95rem;
+    line-height: 1.6;
+}
+.markdown-preview h1, .markdown-preview h2, .markdown-preview h3, .markdown-preview h4 {
+    color: var(--primary-color);
+    margin-top: 20px;
+    margin-bottom: 10px;
+    font-weight: 800;
+}
+.markdown-preview h1 {
+    font-size: 1.5rem;
+    border-bottom: 1px solid var(--glass-border);
+    padding-bottom: 8px;
+}
+.markdown-preview h2 { font-size: 1.3rem; }
+.markdown-preview h3 { font-size: 1.15rem; }
+.markdown-preview p {
+    margin-bottom: 15px;
+    opacity: 0.9;
+}
+.markdown-preview blockquote {
+    border-left: 4px solid var(--primary-color);
+    background: rgba(255, 255, 255, 0.03);
+    padding: 10px 20px;
+    margin: 15px 0;
+    border-radius: 0 8px 8px 0;
+    font-style: italic;
+    opacity: 0.85;
+}
+.markdown-preview ul, .markdown-preview ol {
+    margin-bottom: 15px;
+    padding-left: 25px;
+}
+.markdown-preview li {
+    margin-bottom: 5px;
+}
+.markdown-preview code {
+    font-family: Consolas, Monaco, monospace;
+    background: rgba(0, 0, 0, 0.2);
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-size: 0.85rem;
+    border: 1px solid rgba(255, 255, 255, 0.05);
+}
+.markdown-preview pre {
+    background: rgba(0, 0, 0, 0.25);
+    border: 1px solid var(--glass-border);
+    border-radius: 8px;
+    padding: 15px;
+    overflow-x: auto;
+    margin-bottom: 20px;
+}
+.markdown-preview pre code {
+    background: transparent;
+    border: none;
+    padding: 0;
+    font-size: 0.85rem;
+}
+.markdown-preview table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 20px;
+}
+.markdown-preview th, .markdown-preview td {
+    border: 1px solid var(--glass-border);
+    padding: 10px 12px;
+    text-align: left;
+}
+.markdown-preview th {
+    background: rgba(255, 255, 255, 0.03);
+    font-weight: 600;
+}
+.markdown-preview img {
+    max-width: 100%;
+    height: auto;
+    border-radius: 8px;
+    border: 1px solid var(--glass-border);
+    margin: 15px 0;
+}
+.markdown-preview a {
+    color: var(--primary-color);
+    text-decoration: underline;
+}
+.markdown-preview a:hover {
+    opacity: 0.8;
+}
+
+/* Checkbox alignment in lists */
+.markdown-preview li input[type="checkbox"] {
+    margin-right: 8px;
+    transform: translateY(1px);
+}

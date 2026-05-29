@@ -2,7 +2,7 @@ import os
 import base64
 import re
 import requests
-from flask import Blueprint, jsonify, request, session
+from flask import Blueprint, jsonify, request, session, render_template, redirect, url_for
 from functools import wraps
 
 obsidian_bp = Blueprint('obsidian', __name__)
@@ -53,6 +53,12 @@ def make_github_request(method, path, data=None):
         return None, str(e)
 
 # --- ROUTES ---
+
+@obsidian_bp.route('/vault', methods=['GET'])
+def vault_page():
+    if 'logged_in' not in session:
+        return redirect(url_for('auth.login'))
+    return render_template('dashboard/obsidian.html')
 
 @obsidian_bp.route('/api/config-check', methods=['GET'])
 @login_required

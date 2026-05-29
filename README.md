@@ -134,11 +134,127 @@ Essendo un aggregatore di servizi esterni, Personal Space necessita di alcune cr
 
 ## Deploy
 
-Il progetto è predisposto nativamente per il deploy automatizzato sulla piattaforma **Render.com** tramite il file `render.yaml`.
-1.  Effettuare il collegamento tra il repository GitHub e la dashboard Render.
-2.  Render individuerà la configurazione come `Web Service` e imposterà il server di produzione WSGI con il comando `gunicorn app:app`.
-3.  All'interno della dashboard del progetto su Render, navigare alla scheda **Environment** e inserire manualmente i valori contenuti nel proprio file `.env` locale (in particolare `ADMIN_PASSWORD_HASH`).
-4.  **Gestione dei Segreti API:** Per trasferire `credentials.json` e `browser.json` (non presenti su GitHub), utilizzare la sezione **Secret Files** di Render per montarli in modo sicuro alla radice dell'app (`credentials.json` e `browser.json`). Il codice backend è predisposto per rilevare automaticamente la loro posizione sia in locale (`secrets/`) che in produzione su Render.
+Il progetto è predisposto per essere distribuito in produzione in modo rapido e sicuro. Di seguito sono riportate le istruzioni dettagliate per il deploy sulla piattaforma **Render.com** (utilizzando la configurazione Infrastructure-as-Code fornita) e le indicazioni per una configurazione VPS/IaaS alternativa.
+
+### 1. Deploy su Render.com (Consigliato)
+
+Render.com consente di effettuare il deploy automatico collegando direttamente il proprio repository GitHub. Il file [render.yaml](file:///c:/Users/PCX/.antigravity-ide/Personal-Space/render.yaml) definisce l'infrastruttura necessaria.
+
+#### Persistenza dei Dati (Persistent Disk)
+SQLite e l'applicazione utilizzano la directory `data/` (dove risiede `database.db`) per memorizzare gli articoli del blog e le preferenze dei widget. Poiché le istanze di Render hanno un file system effimero (i dati vengono persi a ogni riavvio o nuovo deploy), il file `render.yaml` configura automaticamente un **Persistent Disk**:
+* **Nome del Volume:** `database-disk`
+* **Punto di Mount:** `/opt/render/project/src/data` (mappato direttamente alla cartella `data/` del progetto)
+* **Dimensione:** 1 GB (più che sufficiente per le esigenze personali dell'applicazione)
+
+*Nota: Al primo avvio, l'applicazione rileverà l'assenza del database nella cartella del volume e lo inizializzerà automaticamente creando le tabelle e inserendo i widget di default.*
+
+#### Variabili d'Ambiente da Configurare
+Durante la creazione del servizio su Render (o nella scheda **Environment** del servizio web creato), è necessario impostare le seguenti variabili d'ambiente:
+
+| Variabile | Descrizione | Valore Consigliato |
+| :--- | :--- | :--- |
+| `FLASK_ENV` | Ambiente di esecuzione di Flask. | `production` (impostato automaticamente dal blueprint) |
+| `SECRET_KEY` | Chiave crittografica per firmare i cookie di sessione. | Una stringa alfanumerica casuale e complessa (auto-generata da Render o inserita manualmente) |
+| `ADMIN_PASSWORD_HASH` | Hash Bcrypt della password dell'amministratore. | Generato localmente eseguendo lo script `python scripts/generate_hash.py` |
+| `TELEGRAM_BOT_TOKEN` | Token del bot Telegram per il form dei contatti. | *(Opzionale)* Ottenuto da [@BotFather](https://t.me/BotFather) |
+| `TELEGRAM_CHAT_ID` | Il tuo ID utente o canale Telegram. | *(Opzionale)* Il tuo ID numerico per ricevere i messaggi |
+
+#### Caricamento delle Credenziali API (Secret Files)
+I file di autenticazione per le API esterne (`credentials.json` per Google e `browser.json` per YouTube Music) non devono essere tracciati su Git. Su Render, puoi caricarli in modo sicuro tramite la funzionalità **Secret Files**:
+1. Apri la dashboard del tuo servizio su Render e vai alla scheda **Environment**.
+2. Scorri fino alla sezione **Secret Files**.
+3. Clicca su **Add Secret File** e aggiungi i seguenti file:
+   * **Nome file:** `credentials.json` -> Incolla il contenuto del file di credenziali del Service Account Google.
+   * **Nome file:** `browser.json` -> Incolla il contenuto del file generato per YouTube Music.
+4. Render monterà questi file direttamente nella directory radice dell'applicazione `/opt/render/project/src/`. Il backend di *Personal Space* rileva automaticamente questi file sia nella cartella `secrets/` (ambiente locale) sia nella cartella radice (ambiente di produzione Render).
+
+#### Istruzioni Passo-Passo per il Deploy
+1. Esegui il fork o il push del repository su un tuo account GitHub privato (consigliato per non esporre configurazioni personali).
+2. Accedi alla dashboard di [Render.com](https://render.com) e clicca su **New > Blueprint**.
+3. Collega il tuo repository GitHub.
+4. Render leggerà il file `render.yaml` e mostrerà la schermata di configurazione iniziale chiedendo di inserire i valori per le variabili d'ambiente contrassegnate con `sync: false` (`ADMIN_PASSWORD_HASH`, `TELEGRAM_BOT_TOKEN`, `TELEGRAM_CHAT_ID`).
+5. Clicca su **Apply** per avviare il build e il deploy.
+6. Una volta completato il deploy, configura i **Secret Files** come descritto nella sezione precedente e riavvia il servizio per caricare le nuove configurazioni.
+
+---
+
+### 2. Deploy Alternativo: VPS o Server Privato (IaaS)
+
+Se preferisci ospitare l'applicazione su un server Linux dedicato (es. Ubuntu Server su AWS, DigitalOcean, Hetzner o Oracle Cloud Free Tier):
+
+#### Requisiti di Sistema
+* Python 3.8+ con modulo `venv`
+* Un web server con funzione di Reverse Proxy (es. Nginx)
+* Un gestore di processi (es. `systemd`)
+* Certificato SSL (es. Let's Encrypt tramite Certbot)
+
+#### Configurazione Passo-Passo
+1. **Clonazione e Setup dell'Ambiente:**
+   ```bash
+   git clone https://github.com/TuoUtente/Personal-Space.git /var/www/personal-space
+   cd /var/www/personal-space
+   python3 -m venv .venv
+   source .venv/bin/activate
+   pip install -r requirements.txt
+   ```
+
+2. **File di Configurazione e Segreti:**
+   * Crea il file `.env` basandoti su `.env.example` e inserisci le chiavi corrette.
+   * Crea la cartella `secrets/` e inserisci all'interno i file `credentials.json` e `browser.json`.
+
+3. **Configurazione del Servizio Systemd:**
+   Crea il file `/etc/systemd/system/personal-space.service`:
+   ```ini
+   [Unit]
+   Description=Gunicorn instance to serve Personal Space Dashboard
+   After=network.target
+
+   [Service]
+   User=www-data
+   Group=www-data
+   WorkingDirectory=/var/www/personal-space
+   Environment="PATH=/var/www/personal-space/.venv/bin"
+   ExecStart=/var/www/personal-space/.venv/bin/gunicorn --workers 3 --bind 127.0.0.1:5000 app:app
+
+   [Install]
+   WantedBy=multi-user.target
+   ```
+   Abilita e avvia il servizio:
+   ```bash
+   sudo systemctl daemon-reload
+   sudo systemctl start personal-space
+   sudo systemctl enable personal-space
+   ```
+
+4. **Configurazione Reverse Proxy (Nginx):**
+   Crea una configurazione per il sito in `/etc/nginx/sites-available/personal-space`:
+   ```nginx
+   server {
+       listen 80;
+       server_name la_tua_dashboard.com;
+
+       location / {
+           proxy_pass http://127.0.0.1:5000;
+           proxy_set_header Host $host;
+           proxy_set_header X-Real-IP $remote_addr;
+           proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+           proxy_set_header X-Forwarded-Proto $scheme;
+       }
+   }
+   ```
+   Abilita il sito e riavvia Nginx:
+   ```bash
+   sudo ln -s /etc/nginx/sites-available/personal-space /etc/nginx/sites-enabled/
+   sudo nginx -t
+   sudo systemctl restart nginx
+   ```
+
+5. **Installazione Certificato SSL:**
+   ```bash
+   sudo apt install certbot python3-certbot-nginx
+   sudo certbot --nginx -d la_tua_dashboard.com
+   ```
+
 
 ## Test
 

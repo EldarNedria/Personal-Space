@@ -1,0 +1,142 @@
+{% extends "base.html" %}
+
+{% block title %}Obsidian Vault Workspace{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/dashboard.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/obsidian.css') }}">
+{% endblock %}
+
+{% block content %}
+<div class="dashboard-layout">
+    <!-- Sidebar -->
+    <aside class="sidebar glass-panel">
+        <div class="sidebar-header">
+            <h2><i class="fa-solid fa-book-open"></i> Vault</h2>
+            <span id="obsidian-repo-label" style="font-size: 0.75rem; opacity: 0.6; font-family: monospace; word-break: break-all; display: block; margin-top: 5px;">Caricamento...</span>
+        </div>
+        <nav class="sidebar-nav custom-scrollbar" style="overflow-y: auto; flex: 1; padding: 15px 0;">
+            <div style="padding: 0 20px; margin-bottom: 15px;">
+                <button type="button" id="obsidian-page-new-note" class="btn" style="width: 100%; font-size: 0.85rem; padding: 8px 12px; display: flex; align-items: center; justify-content: center; gap: 8px;">
+                    <i class="fa-solid fa-plus"></i> Nuova Nota
+                </button>
+            </div>
+            
+            <div class="sidebar-section-title" style="padding: 0 20px 5px 20px; font-size: 0.75rem; font-weight: 800; opacity: 0.5; text-transform: uppercase; letter-spacing: 0.05em;"><i class="fa-regular fa-file-lines"></i> Note (.md)</div>
+            <ul id="obsidian-page-notes-list" class="rss-list" style="margin: 0 0 20px 0; padding: 0 10px;">
+                <div class="loader"></div>
+            </ul>
+
+            <div class="sidebar-section-title" style="padding: 0 20px 5px 20px; font-size: 0.75rem; font-weight: 800; opacity: 0.5; text-transform: uppercase; letter-spacing: 0.05em;"><i class="fa-regular fa-folder-open"></i> File Vault</div>
+            <ul id="obsidian-page-files-list" class="rss-list" style="margin: 0; padding: 0 10px;">
+                <div class="loader"></div>
+            </ul>
+        </nav>
+        <div class="sidebar-footer">
+            <a href="{{ url_for('dashboard.index') }}" class="btn" style="width: 100%; display: flex; align-items: center; justify-content: center; gap: 8px; background: rgba(255,255,255,0.05); color: inherit; border: 1px solid var(--glass-border);">
+                <i class="fa-solid fa-arrow-left"></i> Dashboard
+            </a>
+        </div>
+    </aside>
+
+    <!-- Main Workspace -->
+    <main class="dashboard-main" style="flex: 1; display: flex; flex-direction: row; gap: 20px; padding: 20px 20px 20px 0; min-width: 0; height: calc(100vh - 40px); position: sticky; top: 20px; box-sizing: border-box;">
+        
+        <!-- Editor & Preview Panel -->
+        <div class="glass-panel" style="flex: 2; display: flex; flex-direction: column; padding: 20px; min-width: 0; height: 100%; box-sizing: border-box;">
+            <!-- Config Warning -->
+            <div id="obsidian-page-config-warning" style="display: none; flex-direction: column; align-items: center; justify-content: center; height: 100%; text-align: center; padding: 30px;">
+                <i class="fa-solid fa-triangle-exclamation" style="font-size: 3.5rem; color: var(--warning-color); margin-bottom: 20px;"></i>
+                <h2>Integrazione GitHub Non Configurata</h2>
+                <p style="opacity: 0.8; max-width: 450px; margin-bottom: 20px; line-height: 1.5;">Imposta le variabili d'ambiente <code>OBSIDIAN_GITHUB_REPO</code> e <code>OBSIDIAN_GITHUB_TOKEN</code> nel tuo file <code>.env</code> locale o su Render per attivare la sincronizzazione del tuo vault Obsidian.</p>
+                <pre style="text-align: left; padding: 15px; background: rgba(0,0,0,0.2); border-radius: 8px; font-family: monospace; font-size: 0.85rem; border: 1px solid var(--glass-border); max-width: 100%; overflow-x: auto;">OBSIDIAN_GITHUB_REPO=NedriaEldar/ObsVault1
+OBSIDIAN_GITHUB_TOKEN=il_tuo_github_pat</pre>
+            </div>
+
+            <!-- Workspace Active Area -->
+            <div id="obsidian-page-workspace" style="display: none; flex-direction: column; height: 100%; min-height: 0;">
+                
+                <!-- Welcome State (when no note is selected) -->
+                <div id="obsidian-page-welcome" style="display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; text-align: center; opacity: 0.7;">
+                    <i class="fa-solid fa-book-open" style="font-size: 4.5rem; color: var(--primary-color); margin-bottom: 20px; opacity: 0.8;"></i>
+                    <h2>Il tuo Vault Obsidian</h2>
+                    <p style="max-width: 400px; line-height: 1.5; font-size: 0.95rem;">Seleziona una nota dal menu laterale per iniziare a modificarla, oppure creane una nuova.</p>
+                </div>
+
+                <!-- Editor Active State -->
+                <div id="obsidian-page-editor-container" style="display: none; flex-direction: column; height: 100%; min-height: 0; gap: 15px;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--glass-border); padding-bottom: 10px; flex-wrap: wrap; gap: 10px;">
+                        <div style="display: flex; align-items: center; gap: 10px; min-width: 0; flex: 1;">
+                            <i class="fa-regular fa-file-lines" style="color: var(--primary-color); font-size: 1.3rem; flex-shrink: 0;"></i>
+                            <h2 id="obsidian-page-note-title" style="margin: 0; font-size: 1.25rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">note.md</h2>
+                        </div>
+                        <div style="display: flex; gap: 10px; align-items: center;">
+                            <!-- Editor / Preview Toggle -->
+                            <div class="editor-modes-toggle" style="display: flex; background: rgba(0,0,0,0.2); padding: 3px; border-radius: 6px; border: 1px solid var(--glass-border);">
+                                <button type="button" id="btn-mode-write" class="mode-toggle-btn active"><i class="fa-solid fa-pen"></i> Scrivi</button>
+                                <button type="button" id="btn-mode-preview" class="mode-toggle-btn"><i class="fa-solid fa-eye"></i> Anteprima</button>
+                            </div>
+                            
+                            <button type="button" id="obsidian-page-save-btn" class="btn" style="padding: 8px 16px; display: flex; align-items: center; gap: 8px;">
+                                <i class="fa-solid fa-floppy-disk"></i> Salva
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Editor Textarea Area -->
+                    <div id="editor-write-mode" style="flex: 1; min-height: 0; display: flex; flex-direction: column;">
+                        <textarea id="obsidian-page-textarea" placeholder="Inizia a scrivere la tua nota in formato Markdown..." style="flex: 1; width: 100%; height: 100%; background: rgba(0,0,0,0.15); border: 1px solid var(--glass-border); border-radius: 12px; padding: 20px; color: inherit; font-family: Consolas, Monaco, 'Andale Mono', 'Ubuntu Mono', monospace; font-size: 0.95rem; line-height: 1.6; outline: none; resize: none; box-sizing: border-box;"></textarea>
+                    </div>
+
+                    <!-- Markdown Preview Area -->
+                    <div id="editor-preview-mode" style="display: none; flex: 1; min-height: 0; overflow-y: auto; background: rgba(0,0,0,0.1); border: 1px solid var(--glass-border); border-radius: 12px; padding: 25px 30px; box-sizing: border-box;" class="markdown-preview custom-scrollbar">
+                        <!-- Rendered Markdown goes here -->
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+        <!-- Right Panels: Todos & File Upload -->
+        <div style="flex: 1; display: flex; flex-direction: column; gap: 20px; height: 100%; min-width: 280px; max-width: 360px; box-sizing: border-box;">
+            
+            <!-- Todos Checklist Panel -->
+            <div class="glass-panel" style="flex: 1.2; display: flex; flex-direction: column; padding: 20px; height: 100%; min-height: 0; box-sizing: border-box;">
+                <h3 style="margin-top: 0; border-bottom: 1px solid var(--glass-border); padding-bottom: 10px; margin-bottom: 15px; display: flex; align-items: center; gap: 8px; font-size: 1.1rem;"><i class="fa-solid fa-list-check" style="color: var(--primary-color);"></i> Checklist Todo</h3>
+                <div style="margin-bottom: 12px;">
+                    <form id="obsidian-page-todo-form" style="display: flex; gap: 8px;">
+                        <input type="text" id="obsidian-page-todo-input" placeholder="Aggiungi todo al vault..." required style="flex: 1; padding: 8px 12px; border-radius: 8px; border: 1px solid var(--glass-border); background: rgba(255,255,255,0.05); color: var(--text-color); font-family: inherit; font-size: 0.85rem; outline: none;">
+                        <button type="submit" class="btn" style="padding: 8px 12px; display: flex; align-items: center; justify-content: center;"><i class="fa-solid fa-plus"></i></button>
+                    </form>
+                </div>
+                <div style="flex: 1; overflow-y: auto;" class="custom-scrollbar">
+                    <ul id="obsidian-page-todo-list" class="todo-list" style="max-height: none;">
+                        <div class="loader"></div>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- Upload / Attachments Area -->
+            <div class="glass-panel" style="flex: 0.8; display: flex; flex-direction: column; padding: 20px; min-height: 180px; box-sizing: border-box;">
+                <h3 style="margin-top: 0; border-bottom: 1px solid var(--glass-border); padding-bottom: 10px; margin-bottom: 15px; display: flex; align-items: center; gap: 8px; font-size: 1.1rem;"><i class="fa-solid fa-paperclip" style="color: var(--primary-color);"></i> Carica Allegato</h3>
+                
+                <!-- Drag and drop zone -->
+                <div id="obsidian-page-upload-zone" class="obsidian-upload-zone" style="flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 100px; box-sizing: border-box;">
+                    <i class="fa-solid fa-cloud-arrow-up" style="font-size: 2.2rem; color: var(--primary-color); margin-bottom: 8px;"></i>
+                    <p style="font-size: 0.85rem; margin: 0; font-weight: 600;">Trascina file qui</p>
+                    <span style="font-size: 0.75rem; opacity: 0.6;">o clicca per sfogliare</span>
+                    <input type="file" id="obsidian-page-file-input" style="display: none;">
+                </div>
+            </div>
+
+        </div>
+
+    </main>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<!-- Marked library for parsing markdown client-side -->
+<script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+<script src="{{ url_for('static', filename='js/obsidian_page.js') }}"></script>
+{% endblock %}

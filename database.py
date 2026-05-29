@@ -68,7 +68,6 @@ def init_db(app):
                 ('todos',      'Google Tasks',     'fa-list-check',    1, 1, 0, 1, 5),
                 ('rss',        'Notizie RSS',      'fa-rss',           1, 2, 0, 1, 5),
                 ('calendar',   'Google Calendar',  'fa-calendar-days', 1, 3, 0, 1, 7),
-                ('scratchpad', 'Scratchpad',       'fa-note-sticky',   1, 0, 4, 1, 3),
                 ('pomodoro',   'Timer Pomodoro',   'fa-stopwatch',     1, 1, 5, 1, 4),
                 ('stats',      'Statistiche',      'fa-chart-line',    1, 2, 5, 1, 4),
                 ('links',      'Link Rapidi',      'fa-link',          1, 3, 7, 1, 3),
@@ -86,6 +85,9 @@ def init_db(app):
                     "INSERT INTO widget_preferences (widget_id, widget_name, widget_icon, is_enabled, pos_x, pos_y, size_w, size_h) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
                     ('obsidian', 'Obsidian Vault', 'fa-book-open', 1, 0, 7, 2, 6)
                 )
+        
+        # Rimozione permanente del vecchio widget 'scratchpad' per gli utenti esistenti
+        cursor.execute("DELETE FROM widget_preferences WHERE widget_id = 'scratchpad'")
         
         db.commit()
         
