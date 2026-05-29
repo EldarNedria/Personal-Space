@@ -12,29 +12,29 @@
     <!-- Sidebar -->
     <aside class="sidebar glass-panel">
         <div class="sidebar-header">
-            <h2><i class="fa-solid fa-book-open"></i> Vault</h2>
+            <h2><i class="fa-solid fa-book-open"></i> <span>Vault</span></h2>
             <span id="obsidian-repo-label" style="font-size: 0.75rem; opacity: 0.6; font-family: monospace; word-break: break-all; display: block; margin-top: 5px;">Caricamento...</span>
         </div>
         <nav class="sidebar-nav custom-scrollbar" style="overflow-y: auto; flex: 1; padding: 15px 0;">
             <div style="padding: 0 20px; margin-bottom: 15px;">
                 <button type="button" id="obsidian-page-new-note" class="btn" style="width: 100%; font-size: 0.85rem; padding: 8px 12px; display: flex; align-items: center; justify-content: center; gap: 8px;">
-                    <i class="fa-solid fa-plus"></i> Nuova Nota
+                    <i class="fa-solid fa-plus"></i> <span>Nuova Nota</span>
                 </button>
             </div>
             
-            <div class="sidebar-section-title" style="padding: 0 20px 5px 20px; font-size: 0.75rem; font-weight: 800; opacity: 0.5; text-transform: uppercase; letter-spacing: 0.05em;"><i class="fa-regular fa-file-lines"></i> Note (.md)</div>
+            <div class="sidebar-section-title" style="padding: 0 20px 5px 20px; font-size: 0.75rem; font-weight: 800; opacity: 0.5; text-transform: uppercase; letter-spacing: 0.05em;"><i class="fa-regular fa-file-lines"></i> <span>Note (.md)</span></div>
             <ul id="obsidian-page-notes-list" class="rss-list" style="margin: 0 0 20px 0; padding: 0 10px;">
                 <div class="loader"></div>
             </ul>
 
-            <div class="sidebar-section-title" style="padding: 0 20px 5px 20px; font-size: 0.75rem; font-weight: 800; opacity: 0.5; text-transform: uppercase; letter-spacing: 0.05em;"><i class="fa-regular fa-folder-open"></i> File Vault</div>
+            <div class="sidebar-section-title" style="padding: 0 20px 5px 20px; font-size: 0.75rem; font-weight: 800; opacity: 0.5; text-transform: uppercase; letter-spacing: 0.05em;"><i class="fa-regular fa-folder-open"></i> <span>File Vault</span></div>
             <ul id="obsidian-page-files-list" class="rss-list" style="margin: 0; padding: 0 10px;">
                 <div class="loader"></div>
             </ul>
         </nav>
         <div class="sidebar-footer">
             <a href="{{ url_for('dashboard.index') }}" class="btn" style="width: 100%; display: flex; align-items: center; justify-content: center; gap: 8px; background: rgba(255,255,255,0.05); color: inherit; border: 1px solid var(--glass-border);">
-                <i class="fa-solid fa-arrow-left"></i> Dashboard
+                <i class="fa-solid fa-arrow-left"></i> <span>Dashboard</span>
             </a>
         </div>
     </aside>

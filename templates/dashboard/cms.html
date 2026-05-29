@@ -68,11 +68,12 @@
     <!-- Sidebar -->
     <aside class="sidebar glass-panel">
         <div class="sidebar-header">
-            <h2><i class="fa-solid fa-gauge-high"></i> Dashboard</h2>
+            <h2><i class="fa-solid fa-gauge-high"></i> <span>Dashboard</span></h2>
         </div>
         <nav class="sidebar-nav">
-            <a href="{{ url_for('dashboard.index') }}"><i class="fa-solid fa-house"></i> Home</a>
-            <a href="{{ url_for('cms.cms_index') }}" class="active"><i class="fa-solid fa-newspaper"></i> Gestione Blog</a>
+            <a href="{{ url_for('dashboard.index') }}"><i class="fa-solid fa-house"></i> <span>Home</span></a>
+            <a href="{{ url_for('cms.cms_index') }}" class="active"><i class="fa-solid fa-newspaper"></i> <span>Gestione Blog</span></a>
+            <a href="{{ url_for('obsidian.vault_page') }}"><i class="fa-solid fa-book-open"></i> <span>Obsidian Vault</span></a>
         </nav>
         <div class="sidebar-footer">
             <a href="{{ url_for('auth.logout') }}" class="btn btn-danger"><i class="fa-solid fa-right-from-bracket"></i> Esci</a>

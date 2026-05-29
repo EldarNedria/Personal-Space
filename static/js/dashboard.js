@@ -42,9 +42,6 @@ document.addEventListener('DOMContentLoaded', () => {
     };
     loadQuote();
 
-    // --- CHART.JS ISTANZA ---
-    let tasksChart;
-
     // --- TODO LIST (GOOGLE TASKS AJAX) ---
     const todoList = document.getElementById('todo-list');
     const todoForm = document.getElementById('todo-form');
@@ -61,7 +58,6 @@ document.addEventListener('DOMContentLoaded', () => {
             }
             
             renderTodos(data);
-            updateChart(data);
         } catch (e) {
             console.error('Errore caricamento tasks:', e);
             todoList.innerHTML = '<li>Errore di connessione</li>';
@@ -173,55 +169,6 @@ document.addEventListener('DOMContentLoaded', () => {
         } catch (e) { console.error(e); }
     };
 
-    // --- CHART.JS ---
-    const updateChart = (todos) => {
-        const completed = todos.filter(t => t.completed).length;
-        const pending = todos.length - completed;
-
-        const ctx = document.getElementById('tasksChart').getContext('2d');
-        const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
-        const textColor = isDark ? '#f8fafc' : '#657b83';
-
-        if (tasksChart) {
-            tasksChart.data.datasets[0].data = [completed, pending];
-            tasksChart.update();
-        } else {
-            tasksChart = new Chart(ctx, {
-                type: 'doughnut',
-                data: {
-                    labels: ['Completati', 'Da Fare'],
-                    datasets: [{
-                        data: [completed, pending],
-                        backgroundColor: ['#10b981', '#ef4444'], // Verde e Rosso
-                        borderWidth: 0,
-                        hoverOffset: 4
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: {
-                        legend: {
-                            position: 'bottom',
-                            labels: { color: textColor, font: { family: 'Inter', size: 14 } }
-                        }
-                    },
-                    cutout: '70%'
-                }
-            });
-        }
-    };
-
-    // Reagisci al cambio tema
-    document.getElementById('theme-toggle-btn').addEventListener('click', () => {
-        setTimeout(() => {
-            if (tasksChart) {
-                const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
-                tasksChart.options.plugins.legend.labels.color = isDark ? '#f8fafc' : '#657b83';
-                tasksChart.update();
-            }
-        }, 50);
-    });
 
     // --- WEATHER WIDGET (Open-Meteo) ---
     const getWeatherCategory = (code, isDay = 1) => {

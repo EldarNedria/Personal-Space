@@ -212,3 +212,102 @@
     margin-right: 8px;
     transform: translateY(1px);
 }
+
+/* Collapsible Sidebar Styles for Obsidian Workspace */
+@media (min-width: 769px) {
+    /* Nuova Nota button text transitions */
+    #obsidian-page-new-note span {
+        display: inline-block;
+        max-width: 0;
+        opacity: 0;
+        overflow: hidden;
+        white-space: nowrap;
+        transition: max-width 0.18s cubic-bezier(0.2, 0.8, 0.2, 1), opacity 0.15s ease, margin-left 0.18s cubic-bezier(0.2, 0.8, 0.2, 1);
+        margin-left: 0;
+    }
+    .sidebar:hover #obsidian-page-new-note span {
+        max-width: 180px;
+        opacity: 1;
+        margin-left: 8px;
+    }
+    .sidebar:not(:hover) #obsidian-page-new-note {
+        width: 40px !important;
+        height: 40px !important;
+        border-radius: 50% !important;
+        padding: 0 !important;
+        margin: 0 auto !important;
+        min-width: 40px !important;
+    }
+    .sidebar:not(:hover) .sidebar-nav > div:first-child {
+        padding: 0 !important;
+    }
+
+    /* Section titles collapsed */
+    .sidebar-section-title span {
+        display: inline-block;
+        max-width: 0;
+        opacity: 0;
+        overflow: hidden;
+        white-space: nowrap;
+        transition: max-width 0.18s cubic-bezier(0.2, 0.8, 0.2, 1), opacity 0.15s ease, margin-left 0.18s cubic-bezier(0.2, 0.8, 0.2, 1);
+        margin-left: 0;
+    }
+    .sidebar:hover .sidebar-section-title span {
+        max-width: 180px;
+        opacity: 1;
+        margin-left: 8px;
+    }
+    .sidebar:not(:hover) .sidebar-section-title {
+        text-align: center !important;
+        padding: 0 !important;
+        margin-top: 15px;
+        margin-bottom: 10px;
+    }
+    .sidebar:not(:hover) .sidebar-section-title i {
+        font-size: 1.1rem !important;
+        margin: 0 !important;
+    }
+
+    /* Note lists & File lists collapsed */
+    #obsidian-page-notes-list a,
+    #obsidian-page-files-list a {
+        display: inline-block;
+        max-width: 0;
+        opacity: 0;
+        overflow: hidden;
+        white-space: nowrap;
+        transition: max-width 0.18s cubic-bezier(0.2, 0.8, 0.2, 1), opacity 0.15s ease, margin-left 0.18s cubic-bezier(0.2, 0.8, 0.2, 1);
+        margin-left: 0;
+    }
+    .sidebar:hover #obsidian-page-notes-list a,
+    .sidebar:hover #obsidian-page-files-list a {
+        max-width: 180px;
+        opacity: 1;
+        margin-left: 10px;
+    }
+    
+    .sidebar:not(:hover) #obsidian-page-notes-list,
+    .sidebar:not(:hover) #obsidian-page-files-list {
+        padding: 0 10px !important;
+    }
+    .sidebar:not(:hover) #obsidian-page-notes-list li,
+    .sidebar:not(:hover) #obsidian-page-files-list li {
+        padding: 8px 0 !important;
+        justify-content: center !important;
+    }
+    .sidebar:not(:hover) #obsidian-page-notes-list li .btn-delete,
+    .sidebar:not(:hover) #obsidian-page-files-list li .btn-delete {
+        display: none !important;
+    }
+    .sidebar:not(:hover) #obsidian-page-notes-list .note-item-info,
+    .sidebar:not(:hover) #obsidian-page-files-list .file-item-info {
+        justify-content: center !important;
+        gap: 0 !important;
+        flex: none !important;
+    }
+    .sidebar:not(:hover) #obsidian-page-notes-list .note-item-info i,
+    .sidebar:not(:hover) #obsidian-page-files-list .file-item-info i {
+        font-size: 1.2rem !important;
+        margin: 0 !important;
+    }
+}

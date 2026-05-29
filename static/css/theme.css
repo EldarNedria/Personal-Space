@@ -12,6 +12,7 @@
     
     --font-main: 'Inter', sans-serif;
     --transition: all 0.3s ease;
+    --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
 }
 
 [data-theme="light"] {
@@ -37,19 +38,43 @@ body {
     transition: background-color 0.3s ease, color 0.3s ease;
 }
 
+/* Custom Scrollbar for the whole page and overflow containers */
+::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}
+::-webkit-scrollbar-track {
+    background: transparent;
+}
+::-webkit-scrollbar-thumb {
+    background: rgba(128, 128, 128, 0.3);
+    border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+    background: rgba(128, 128, 128, 0.5);
+}
+
 /* Glassmorphism Utilities */
 .glass-panel {
     background: var(--glass-bg);
-    backdrop-filter: blur(12px);
-    -webkit-backdrop-filter: blur(12px);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
     border: 1px solid var(--glass-border);
     border-radius: 16px;
-    box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
-    transition: var(--transition);
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+    transition: border-color 0.15s ease;
 }
 
 .glass-panel:hover {
-    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+    border-color: rgba(255, 255, 255, 0.2);
+}
+
+[data-theme="light"] .glass-panel {
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+}
+
+[data-theme="light"] .glass-panel:hover {
+    border-color: rgba(0, 0, 0, 0.2);
 }
 
 /* Base components */
@@ -63,12 +88,16 @@ body {
     border: none;
     cursor: pointer;
     font-weight: 600;
-    transition: var(--transition);
+    transition: background-color 0.2s ease, transform 0.16s var(--ease-out), box-shadow 0.2s ease;
 }
 
 .btn:hover {
     background-color: var(--primary-hover);
     transform: translateY(-2px);
+}
+
+.btn:active {
+    transform: translateY(-1px) scale(0.97);
 }
 
 .btn-danger {
